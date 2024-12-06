@@ -2,60 +2,42 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 
 public class MyGdxGame extends ApplicationAdapter {
-	SpriteBatch batch;
-	Texture img;
-	float  xinput = 0, yinput = 0, ximg = 0, yimg = 0;
-	float  tolerance = 5.0f, SPEED = 5.0f;
+	private SpriteBatch batch;
+	private Player player;
+	private PlayerController playerController;
 
 	@Override
-	public void create () {
+	public void create() {
 		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
+		player = new Player("Wraith_idle.png", 100, 10);
+		playerController = new PlayerController(player);
+		Gdx.input.setInputProcessor(playerController);  // Controlador de Inputs, acredito que só o player vai ter inputs no jogo
 	}
 
 	@Override
 	public void render() {
-		ScreenUtils.clear(1, 0, 0, 1);
+		float deltaTime = Gdx.graphics.getDeltaTime();
 
-		if (Gdx.input.isTouched()) {
-			xinput = Gdx.input.getX() - img.getWidth()/2;
-			yinput = Gdx.graphics.getHeight() - Gdx.input.getY() - img.getHeight()/2;
-		}
+		// Fazer Fundo
+		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		// Atualiza o player
+		playerController.update();
+		player.update(deltaTime);
 
 		batch.begin();
-
-		float dx = xinput - ximg;
-		float dy = yinput - yimg;
-
-		float distance = (float) Math.sqrt(dx * dx + dy * dy);
-
-		if (distance > tolerance) {
-			float moveX = (dx / distance) * SPEED;
-			float moveY = (dy / distance) * SPEED;
-
-			ximg += moveX;
-			yimg += moveY;
-
-			if (distance < SPEED) {
-				ximg = xinput;
-				yimg = yinput;
-			}
-		}
-
-		batch.draw(img, ximg, yimg);
+		player.render(batch);
 		batch.end();
 	}
 
 	@Override
-	public void dispose () {
+	public void dispose() {
 		batch.dispose();
-		img.dispose();
+		player.dispose();
 	}
-
-	//teste
 }
