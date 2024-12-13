@@ -14,6 +14,7 @@ public class Player {
     private boolean isJumping;
     private float gravity;
     private float verticalSpeed;
+    private int spriteDirection;
 
     public Player(String texturePath, float startX, float startY) {
         texture = new Texture(texturePath);
@@ -24,10 +25,11 @@ public class Player {
 
         velocity = new Vector2(0, 0);
         speed = 200; // Velocidade
-        jumpSpeed = 300; // Velocidade do pulo
+        jumpSpeed = 1400; // Velocidade do pulo
         isJumping = false;
-        gravity = -500; // Gravidade
+        gravity = -5000; // Gravidade
         verticalSpeed = 0;
+        this.spriteDirection = 1;
     }
 
     public void update(float deltaTime) {
@@ -48,18 +50,18 @@ public class Player {
             verticalSpeed = 0;
             isJumping = false;
         }
+        if (this.velocity.x < 0 && spriteDirection != -1){
+            sprite.flip(true, false);
+            spriteDirection = -1;
+        }
+        else if (this.velocity.x > 0 && spriteDirection != 1) {
+            sprite.flip(true, false);
+            spriteDirection = 1;
+        }
     }
 
-    public void moveLeft() {
-        velocity.x = -speed;
-    }
-
-    public void moveRight() {
-        velocity.x = speed;
-    }
-
-    public void stop() {
-        velocity.x = 0;
+    public void atualizaVelocityX(float direction) {
+        this.velocity.x += direction * speed;
     }
 
     public void jump() {

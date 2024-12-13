@@ -27,7 +27,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		// Atualiza o player
-		playerController.update();
 		player.update(deltaTime);
 
 		batch.begin();
