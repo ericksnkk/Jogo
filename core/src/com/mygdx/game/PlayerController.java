@@ -19,7 +19,10 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.D) {  // Move para a direita
             player.atualizaVelocityX(1);
         }
-        return true;
+        if (keycode == Input.Keys.SPACE) {
+            player.jump();
+        }
+        return false;
     }
 
     @Override
@@ -30,15 +33,6 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.D) {
             player.atualizaVelocityX(-1);
         }
-        return true;
-    }
-
-    @Override
-    public boolean keyTyped(char character) {
-        // Pulo
-        if (character == ' ') {
-            player.jump();
-        }
-        return true;
+        return false;
     }
 }

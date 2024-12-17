@@ -15,13 +15,17 @@ public class Player {
     private float gravity;
     private float verticalSpeed;
     private int spriteDirection;
+    private float scale;
 
-    public Player(String texturePath, float startX, float startY) {
-        texture = new Texture(texturePath);
+    public Player(Texture texture, float startX, float startY) {
         sprite = new Sprite(texture);
-        sprite.setPosition(startX, startY);
 
-        sprite.setScale(1f / 3f);  // Tamanho do personagem
+        this.scale = 1f / 4f;
+        sprite.setScale(scale);  // Tamanho do personagem
+
+        sprite.setOrigin(0, 0);
+
+        sprite.setPosition(startX, startY);
 
         velocity = new Vector2(0, 0);
         speed = 200; // Velocidade
@@ -45,8 +49,8 @@ public class Player {
         sprite.translateY(verticalSpeed * deltaTime);
 
         //Impedir que passe o chao
-        if (sprite.getY() <= 0) {
-            sprite.setY(0);
+        if (sprite.getY() <= 30) {
+            sprite.setY(30);
             verticalSpeed = 0;
             isJumping = false;
         }
@@ -69,6 +73,14 @@ public class Player {
             verticalSpeed = jumpSpeed;
             isJumping = true;
         }
+    }
+
+    public Sprite getSprite() {
+        return sprite;
+    }
+
+    public Vector2 getCenterPosition() {
+        return new Vector2(sprite.getX() + (sprite.getWidth() * scale)/2, sprite.getY() + (sprite.getHeight() * scale)/2);
     }
 
     public void render(SpriteBatch batch) {
