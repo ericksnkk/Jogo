@@ -38,7 +38,7 @@ public class MyGdxGame extends Game {
 
 		assetManager.finishLoading();
 
-		setScreen(new TelaPrincipal(this));
+		setScreen(new TelaTeste(this));
 	}
 
 	@Override

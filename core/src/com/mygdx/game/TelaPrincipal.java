@@ -93,6 +93,7 @@ public class TelaPrincipal implements Screen {
 
     private void atualizaCamera(){
         Vector2 position = player.getCenterPosition();
+
         if(position.x - game.camera.position.x > 100){
             game.camera.position.set(position.x + -100, game.camera.position.y, 0);
             game.camera.update();

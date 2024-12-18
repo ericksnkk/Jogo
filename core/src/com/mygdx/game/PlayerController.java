@@ -20,7 +20,10 @@ public class PlayerController extends InputAdapter {
             player.atualizaVelocityX(1);
         }
         if (keycode == Input.Keys.SPACE) {
-            player.jump();
+            player.startJump();
+        }
+        if (keycode == Input.Keys.F) {
+            player.attack();
         }
         return false;
     }
@@ -32,6 +35,9 @@ public class PlayerController extends InputAdapter {
         }
         if (keycode == Input.Keys.D) {
             player.atualizaVelocityX(-1);
+        }
+        if (keycode == Input.Keys.SPACE) {
+            player.endJump();
         }
         return false;
     }
