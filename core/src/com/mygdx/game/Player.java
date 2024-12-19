@@ -3,11 +3,8 @@ package com.mygdx.game;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 
 public class Player {
     private Texture texture;
@@ -18,26 +15,19 @@ public class Player {
     private boolean isJumping, isAttacking;
     private float gravity;
     private float verticalSpeed;
-    private int spriteDirection; // 1 para direita, -1 para esquerda
+    private int spriteDirection;
     private float scale;
     private float jumpTimer, attackTimer;
     private float attackDelay;
-
-    private TextureAtlas idleAtlas;
-    private Animation<AtlasRegion> idleAnimation;
-    private TextureAtlas walkingAtlas;
-    private Animation<AtlasRegion> walkingAnimation;
-
-    private float stateTime;
-    private boolean isIdle, isWalking;
 
     public Player(Texture texture, float startX, float startY) {
         sprite = new Sprite(texture);
 
         this.scale = 1f / 4f;
-        sprite.setScale(scale);
+        sprite.setScale(scale);  // Tamanho do personagem
 
         sprite.setOrigin(0, 0);
+
         sprite.setPosition(startX, startY);
 
         velocity = new Vector2(0, 0);
@@ -50,49 +40,39 @@ public class Player {
         jumpTimer = 1;
         attackTimer = 1;
         attackDelay = 0;
-        this.spriteDirection = 1; // Inicialmente o personagem olha para a direita
-
-        // Carregar animações
-        idleAtlas = new TextureAtlas("IdleAnimation/Idle.atlas");
-        idleAnimation = new Animation<>(0.1f, idleAtlas.getRegions());
-        walkingAtlas = new TextureAtlas("WalkingAnimation/Walking.atlas");
-        walkingAnimation = new Animation<>(0.1f, walkingAtlas.getRegions());
-
-        stateTime = 0;
-        isIdle = true;
-        isWalking = false;
+        this.spriteDirection = 1;
     }
 
     public void update(float deltaTime) {
-        stateTime += deltaTime;
-        isWalking = velocity.x != 0;
-        isIdle = !isWalking;
-
-        // Atualiza a posição do personagem
+        // Atualiza a posição do jogador com base na velocidade horizontal
         sprite.translateX(velocity.x * deltaTime);
 
+        //Gravidade
         if (isJumping) {
             velocity.y += gravity * deltaTime;
         }
-        if (jumpTimer < 0.4) {
+        if(jumpTimer < 0.4){
             jumpTimer += deltaTime;
             velocity.y += (1300 / (jumpTimer + 0.2)) * deltaTime;
         }
 
-        if (attackTimer < 0.2) {
+        if(attackTimer < 0.2){
             attackTimer += deltaTime;
-        } else if (isAttacking) {
+        } else if(isAttacking) {
             isAttacking = false;
             attackDelay = 0.4f;
         }
         if (attackDelay > 0) {
             attackDelay -= deltaTime;
-        } else if (attackDelay != 0) {
+
+        } else if(attackDelay != 0){
             attackDelay = 0;
         }
 
+        // Posicao vertical
         sprite.translateY(velocity.y * deltaTime);
 
+        //Impedir que passe o chao
         if (sprite.getY() <= 30) {
             sprite.setY(30);
             velocity.y = 0;
@@ -100,35 +80,14 @@ public class Player {
             jumpTimer = 1;
         }
 
-        // Controle da direção do sprite (esquerda ou direita)
-        if (velocity.x < 0 && spriteDirection != -1) {
-            spriteDirection = -1; // Personagem olha para a esquerda
-        } else if (velocity.x > 0 && spriteDirection != 1) {
-            spriteDirection = 1; // Personagem olha para a direita
+        if (this.velocity.x < 0 && spriteDirection != -1){ //Ajusta direcao do sprite ao andar
+            sprite.flip(true, false);
+            spriteDirection = -1;
         }
-    }
-
-    public void render(SpriteBatch batch) {
-        // Se estiver andando, mostra a animação de walking
-        if (isWalking) {
-            if (spriteDirection == -1) {
-                sprite.setRegion(walkingAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(true, false);  // Flip horizontal para a esquerda
-            } else {
-                sprite.setRegion(walkingAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(false, false);  // Sem flip (para direita)
-            }
-        } else if (isIdle) {
-            // Se estiver em idle, mostra a animação de idle na direção correta
-            if (spriteDirection == -1) {
-                sprite.setRegion(idleAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(true, false);  // Flip horizontal para a esquerda
-            } else {
-                sprite.setRegion(idleAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(false, false);  // Sem flip (para direita)
-            }
+        else if (this.velocity.x > 0 && spriteDirection != 1) {
+            sprite.flip(true, false);
+            spriteDirection = 1;
         }
-        sprite.draw(batch);
     }
 
     public void startJump() {
@@ -143,8 +102,8 @@ public class Player {
         jumpTimer = 1;
     }
 
-    public void attack() {
-        if (!isAttacking && attackDelay == 0) {
+    public void attack(){
+        if(!isAttacking && attackDelay == 0){
             isAttacking = true;
             attackTimer = 0;
         }
@@ -175,17 +134,18 @@ public class Player {
     }
 
     public Vector2 getCenterPosition() {
-        return new Vector2(sprite.getX() + (sprite.getWidth() * scale) / 2, sprite.getY() + (sprite.getHeight() * scale) / 2);
+        return new Vector2(sprite.getX() + (sprite.getWidth() * scale)/2, sprite.getY() + (sprite.getHeight() * scale)/2);
     }
 
     public Rectangle getPlayerBounds() {
         return new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale);
     }
 
-    public Rectangle getAttackHitBox() {
-        if (spriteDirection == 1) {
+    public Rectangle getAttackHitBox(){
+        if(spriteDirection == 1){
             return new Rectangle(sprite.getX() + (sprite.getWidth() * scale), sprite.getY(), 30, 50);
-        } else {
+        }
+        else{
             return new Rectangle(sprite.getX() - 30, sprite.getY(), 30, 50);
         }
     }
@@ -194,8 +154,11 @@ public class Player {
         return velocity.y;
     }
 
+    public void render(SpriteBatch batch) {
+        sprite.draw(batch);
+    }
+
     public void dispose() {
-        idleAtlas.dispose();
-        walkingAtlas.dispose();
+        texture.dispose();
     }
 }
