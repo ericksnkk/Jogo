@@ -18,6 +18,9 @@ public class TelaTeste implements Screen {
     final MyGdxGame game;
     private Player player;
     private PlayerController playerController;
+
+    private Inimigo inimigo;
+
     private ShapeRenderer shape;
 
     private Rectangle rectangle, enemie;
@@ -31,9 +34,7 @@ public class TelaTeste implements Screen {
 
         rectangle = new Rectangle(200, 200, 300, 200);
 
-        enemie = new Rectangle(200, 30, 55, 100);
-        enemieAlive = true;
-
+        inimigo = new Inimigo(300, 30);
 
         player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), 100, 50);
         playerController = new PlayerController(player);
@@ -59,9 +60,15 @@ public class TelaTeste implements Screen {
         // Atualiza o player
         player.update(delta);
 
+        inimigo.update(delta);
+
         Rectangle playerBounds = player.getPlayerBounds();
 
         detectarColisao(playerBounds, rectangle, previousPlayerBound);
+
+        if(!player.isAttacking()){
+            inimigo.setWasHited(false);
+        }
 
         game.batch.begin();
         player.render(game.batch);
@@ -81,11 +88,12 @@ public class TelaTeste implements Screen {
             Rectangle attackHitBox = player.getAttackHitBox();
             shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
 
-            colisaoAtaque(attackHitBox, enemie);
+            colisaoAtaque(attackHitBox, inimigo);
         }
-        if(enemieAlive){
+        if(inimigo.isAlive()){
             shape.setColor(Color.RED);
-            shape.rect(enemie.x, enemie.y, enemie.width, enemie.height);
+            Rectangle hitboxInimigo = inimigo.getHitboxRect();
+            shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
         }
 
         shape.end();
@@ -169,9 +177,16 @@ public class TelaTeste implements Screen {
         }
     }
 
-    private void colisaoAtaque(Rectangle playerAtack, Rectangle enemie){
-        if(playerAtack.overlaps(enemie)){
-            enemieAlive = false;
+    private void colisaoAtaque(Rectangle playerAtack, Inimigo inimigo){
+        Rectangle hitBoxInimigo = inimigo.getHitboxRect();
+        if(playerAtack.overlaps(hitBoxInimigo)){
+            if(inimigo.isAlive()){
+                if(!inimigo.wasHited()){
+                    inimigo.decreaseLife(1);
+                    inimigo.setWasHited(true);
+                }
+
+            }
         }
     }
 }

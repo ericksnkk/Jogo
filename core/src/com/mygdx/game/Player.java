@@ -7,14 +7,12 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
-    private Texture texture;
     private Sprite sprite;
     private Vector2 velocity;
     private float speed;
     private float jumpSpeed;
     private boolean isJumping, isAttacking;
     private float gravity;
-    private float verticalSpeed;
     private int spriteDirection;
     private float scale;
     private float jumpTimer, attackTimer;
@@ -36,7 +34,6 @@ public class Player {
         isJumping = true;
         isAttacking = false;
         gravity = -4500; // Gravidade
-        verticalSpeed = 0;
         jumpTimer = 1;
         attackTimer = 1;
         attackDelay = 0;
@@ -156,9 +153,5 @@ public class Player {
 
     public void render(SpriteBatch batch) {
         sprite.draw(batch);
-    }
-
-    public void dispose() {
-        texture.dispose();
     }
 }
