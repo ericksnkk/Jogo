@@ -204,12 +204,16 @@ public class Player {
             }
         }
         if(isAttacking){
-
-            if(spriteDirection == -1){
-                attack_sprite.setPosition(sprite.getX() - attack_sprite.getWidth() * 1f/2f + 15, sprite.getY());
-                //attack_sprite.flip(true, false);
+            if(!onGround && lookDirection == -1){
+                attack_sprite.setRotation(-90);
+                attack_sprite.setPosition(sprite.getX() , sprite.getY() + 10);
+                attack_sprite.setFlip(false, false);
+            } else if(spriteDirection == -1){
+                attack_sprite.setRotation(0);
+                attack_sprite.setPosition(sprite.getX() - attack_sprite.getWidth() * (1f/2f) + 15, sprite.getY());
                 attack_sprite.setFlip(true, false);
             } else {
+                attack_sprite.setRotation(0);
                 attack_sprite.setPosition(sprite.getX() + sprite.getWidth() * scale - 15, sprite.getY());
                 attack_sprite.setFlip(false, false);
             }
@@ -301,15 +305,15 @@ public class Player {
     }
 
     public Rectangle getPlayerHitBox(){
-        return new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale);
+        return new Rectangle(sprite.getX() + 10, sprite.getY(), sprite.getWidth() * scale - 20, sprite.getHeight() * scale);
     }
 
     public Rectangle getAttackHitBox() {
         if(!onGround && lookDirection == -1){
             return new Rectangle(sprite.getX() - 10,
-                                    sprite.getY() - 35,
+                                    sprite.getY() - 90,
                                 sprite.getWidth() * scale + 10,
-                                45);
+                                100);
         }
         if (spriteDirection == 1) {
             return new Rectangle(sprite.getX() + (sprite.getWidth() * scale) - 10,

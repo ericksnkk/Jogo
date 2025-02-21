@@ -88,6 +88,7 @@ public class TelaTeste implements Screen {
 
         //Get hitbox para colisao
         Rectangle playerBounds = player.getPlayerBounds();
+        Rectangle playerHitBox;
         Rectangle hitboxInimigo = inimigo.getHitboxRect();
 
         Rectangle[] r = {paredes[0], paredes[1], paredes[2],
@@ -103,7 +104,8 @@ public class TelaTeste implements Screen {
             colisaoAtaque(attackHitBox, inimigo);
         }
 
-        colisaoInimigoPlayer(playerBounds, inimigo);
+        playerHitBox = player.getPlayerHitBox();
+        colisaoInimigoPlayer(playerHitBox, inimigo);
 
 
         game.batch.begin();                                 //Renderiza sprites na tela
@@ -143,6 +145,9 @@ public class TelaTeste implements Screen {
             playerBounds = player.getPlayerBounds();
             shape.setColor(Color.WHITE);
             shape.rect(playerBounds.x, playerBounds.y, playerBounds.width, playerBounds.height);
+
+            shape.setColor(Color.RED);
+            shape.rect(playerHitBox.x, playerHitBox.y, playerHitBox.width, playerHitBox.height);
 
 
             shape.end();
