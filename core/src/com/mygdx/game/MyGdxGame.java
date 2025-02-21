@@ -35,10 +35,12 @@ public class MyGdxGame extends Game {
 		assetManager = new AssetManager();
 
 		assetManager.load("Wraith_idle.png", Texture.class);
+		assetManager.load("bg_menu.png", Texture.class);
+		assetManager.load("Skeleton enemy.png", Texture.class);
 
 		assetManager.finishLoading();
 
-		setScreen(new TelaTeste(this));
+		setScreen(new Menu(this));
 	}
 
 	@Override

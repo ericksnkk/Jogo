@@ -14,10 +14,13 @@ public class PlayerController extends InputAdapter {
     @Override
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.A) {  // Move para a esquerda
-            player.atualizaVelocityX(-1);
+            player.atualizaDirection(-1);
         }
         if (keycode == Input.Keys.D) {  // Move para a direita
-            player.atualizaVelocityX(1);
+            player.atualizaDirection(1);
+        }
+        if (keycode == Input.Keys.S) {
+            player.atualizaLookDirection(-1);
         }
         if (keycode == Input.Keys.SPACE) {
             player.startJump();
@@ -25,16 +28,22 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.F) {
             player.attack();
         }
+        if (keycode == Input.Keys.E) {
+            player.dash();
+        }
         return false;
     }
 
     @Override
     public boolean keyUp(int keycode) {
         if (keycode == Input.Keys.A) {
-            player.atualizaVelocityX(1);
+            player.atualizaDirection(1);
         }
         if (keycode == Input.Keys.D) {
-            player.atualizaVelocityX(-1);
+            player.atualizaDirection(-1);
+        }
+        if (keycode == Input.Keys.S) {
+            player.atualizaLookDirection(1);
         }
         if (keycode == Input.Keys.SPACE) {
             player.endJump();

@@ -8,6 +8,12 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -15,118 +21,147 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import java.util.ArrayList;
 
 public class TelaTeste implements Screen {
+    final int MAP_SCALE = 3;
     final MyGdxGame game;
     private Player player;
     private PlayerController playerController;
-
     private Inimigo inimigo;
 
     private ShapeRenderer shape;
 
-    private Rectangle rectangle, enemie;
-    private boolean enemieAlive;
+    private OrthogonalTiledMapRenderer tmr;
+    private TiledMap map;
 
+    private Rectangle[] plataformas = new Rectangle[15], paredes = new Rectangle[10];
+    private int nPlataformas, nParedes;
+    private boolean debugMode = false;
 
     public TelaTeste(final MyGdxGame game) {
         this.game = game;
 
+        map = new TmxMapLoader().load("maps/lvl2.tmx");
+        tmr = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
+
+
         shape = new ShapeRenderer();
 
-        rectangle = new Rectangle(200, 200, 300, 200);
+        nPlataformas = 15;
+        nParedes = 3;
 
-        inimigo = new Inimigo(300, 30);
+        paredes[0] = new Rectangle(1840*MAP_SCALE, 0, 1380 * MAP_SCALE, 16*MAP_SCALE);
+        paredes[1] = new Rectangle(1856*MAP_SCALE, 0, 16 * MAP_SCALE, 400*MAP_SCALE);
+        paredes[2] = new Rectangle(3200*MAP_SCALE, 0, 16 * MAP_SCALE, 400*MAP_SCALE);
 
-        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), 100, 50);
+        plataformas[0] = new Rectangle(1984*MAP_SCALE, 64 * MAP_SCALE, 160 * MAP_SCALE, 16*MAP_SCALE);
+        plataformas[1] = new Rectangle(2223*MAP_SCALE, 64 * MAP_SCALE, 67 * MAP_SCALE, 16*MAP_SCALE);
+        plataformas[2] = new Rectangle(2300*MAP_SCALE, 112 * MAP_SCALE, 80 * MAP_SCALE, 16*MAP_SCALE);
+        plataformas[3] = new Rectangle(2608*MAP_SCALE, 0 * MAP_SCALE, 16 * MAP_SCALE, 64*MAP_SCALE);
+        plataformas[4] = new Rectangle(2672*MAP_SCALE, 0 * MAP_SCALE, 16 * MAP_SCALE, 96*MAP_SCALE);
+        plataformas[5] = new Rectangle(2768*MAP_SCALE, 112 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
+        plataformas[6] = new Rectangle(3006*MAP_SCALE, 48 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
+
+        inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 3000 * MAP_SCALE, 16 * MAP_SCALE);
+        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), 2500 * MAP_SCALE, 300);
+
         playerController = new PlayerController(player);
         Gdx.input.setInputProcessor(playerController);
     }
 
     @Override
-    public void show() {
-
-    }
+    public void show() {    }
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(0, 0.5f, 0, 1);
-
-        game.batch.setProjectionMatrix(game.camera.combined);
-
         Gdx.gl.glClearColor(.21f, .37f, .23f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        Rectangle previousPlayerBound = player.getPlayerBounds();
+        game.batch.setProjectionMatrix(game.camera.combined);
 
-        // Atualiza o player
+        tmr.setView(game.camera);
+        tmr.render();
+
+        Rectangle previousPlayerBounds = player.getPlayerBounds(); //Posicao antiga do player para usa na colisao
+
+        //Updates do jogo
         player.update(delta);
-
         inimigo.update(delta);
 
+        //Get hitbox para colisao
         Rectangle playerBounds = player.getPlayerBounds();
+        Rectangle hitboxInimigo = inimigo.getHitboxRect();
 
-        detectarColisao(playerBounds, rectangle, previousPlayerBound);
+        Rectangle[] r = {paredes[0], paredes[1], paredes[2],
+                        plataformas[0], plataformas[1], plataformas[2], plataformas[3], plataformas[4], plataformas[5], plataformas[6]};
 
-        if(!player.isAttacking()){
+        detectarColisao(playerBounds, previousPlayerBounds, r);
+
+        if(!player.isAttacking()){ //Reseta o Foi Atacado de todos os inimigos
             inimigo.setWasHited(false);
         }
+        else {
+            Rectangle attackHitBox = player.getAttackHitBox();
+            colisaoAtaque(attackHitBox, inimigo);
+        }
 
-        game.batch.begin();
+        colisaoInimigoPlayer(playerBounds, inimigo);
+
+
+        game.batch.begin();                                 //Renderiza sprites na tela
+        if(inimigo.isAlive()){
+            inimigo.draw(game.batch);
+        }
         player.render(game.batch);
+
         game.batch.end();
 
         shape.setProjectionMatrix(game.camera.combined);
-        shape.begin(ShapeRenderer.ShapeType.Filled);
+        shape.begin(ShapeRenderer.ShapeType.Filled);        //Renderiza shapes na tela
 
-        shape.setColor(Color.SKY);
-        shape.rect(0, 0, 750, 30);
 
-        shape.setColor(Color.TAN);
-        shape.rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-
-        if (player.isAttacking()){
+        if (player.isAttacking()) {
             shape.setColor(Color.YELLOW);
             Rectangle attackHitBox = player.getAttackHitBox();
             shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
-
-            colisaoAtaque(attackHitBox, inimigo);
-        }
-        if(inimigo.isAlive()){
-            shape.setColor(Color.RED);
-            Rectangle hitboxInimigo = inimigo.getHitboxRect();
-            shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
         }
 
         shape.end();
 
+        if(debugMode) {
+            shape.begin(ShapeRenderer.ShapeType.Line);
+
+            if (player.isAttacking()) {
+                shape.setColor(Color.YELLOW);
+                Rectangle attackHitBox = player.getAttackHitBox();
+                shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
+            }
+
+            if (inimigo.isAlive()) {
+                shape.setColor(Color.ORANGE);
+                shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
+            }
+
+            shape.end();
+        }
+
         atualizaCamera();
-
-        //System.out.println(player.getSprite().getX());
     }
 
     @Override
-    public void pause() {
-
-    }
+    public void pause() {    }
 
     @Override
-    public void resume() {
-
-    }
+    public void resume() {    }
 
     @Override
-    public void hide() {
-
-    }
+    public void hide() {    }
 
     @Override
     public void resize(int width, int height) {
-        game.viewport.update(width, height, true);
+        game.viewport.update(width, height, false);
     }
 
     @Override
-    public void dispose() {
-
-    }
+    public void dispose() {    }
 
     private void atualizaCamera(){
         Vector2 position = player.getCenterPosition();
@@ -139,42 +174,42 @@ public class TelaTeste implements Screen {
             game.camera.update();
         }
 
-        //System.out.println(position.x - game.camera.position.x);
     }
 
-    private void detectarColisao(Rectangle playerBounds, Rectangle platformBounds, Rectangle previousPlayerBound) {
-        if(playerBounds.overlaps(platformBounds)){
-            Vector2 newPosition = new Vector2(playerBounds.x, playerBounds.y);
-            if(playerBounds.x + playerBounds.width > platformBounds.x && playerBounds.x < platformBounds.x + platformBounds.width){
-                newPosition.x = previousPlayerBound.x;
-            }
-            if((player.getVelocityY() > 0) && (playerBounds.y + playerBounds.height > platformBounds.y && playerBounds.y < platformBounds.y + platformBounds.height)){
-                newPosition.y = previousPlayerBound.y;
-                player.endJump();
-                player.setVelocityY(0);
-                System.out.println(player.getVelocityY());
-            }
-//            if (playerBounds.y < platformBounds.y + platformBounds.height && playerBounds.y > platformBounds.y) {
-//                playerBounds.y = platformBounds.y + platformBounds.height;
-//            }
-//            // Colisão pela parte inferior
-//            else if (playerBounds.y + playerBounds.height > platformBounds.y) {
-//                playerBounds.y = platformBounds.y - playerBounds.height;
-//                player.endJump();
-//                player.setVelocityY(0);
-//            }
-//            // Colisão pela direita
-//            else if (playerBounds.x > platformBounds.x + platformBounds.width) {
-//                playerBounds.x = platformBounds.x + platformBounds.width;
-//            }
-//            // Colisão pela esquerda
-//            else if (playerBounds.x + playerBounds.width < platformBounds.x) {
-//                playerBounds.x = platformBounds.x - playerBounds.width;
-//            }
+    private void detectarColisao(Rectangle playerBounds, Rectangle previousPlayerBounds, Rectangle[] platformBounds) {
+        Rectangle auxBounds = previousPlayerBounds;
 
-            player.setPosition(newPosition.x, newPosition.y
-            );
+        auxBounds.x = playerBounds.x;
+        for(int i = 0 ; i < platformBounds.length ; i++){
+            Rectangle rect = platformBounds[i];
+
+            if(auxBounds.overlaps(rect)){
+                if(player.getDirection() < 0){
+                    auxBounds.x = rect.x + rect.width + 0.01f;
+                } else {
+                    auxBounds.x = rect.x - auxBounds.width - 0.01f;
+                }
+            }
         }
+
+        auxBounds.y = playerBounds.y;
+        for(int i = 0 ; i < platformBounds.length ; i++) {
+            Rectangle rect = platformBounds[i];
+
+            if(auxBounds.overlaps(rect)){
+                if(player.getVelocityY() < 0){
+                    auxBounds.y = rect.y + rect.height + 0.01f;
+                    player.setOnGround(true);
+                    //player.setVelocityY(0);
+                } else {
+                    auxBounds.y = rect.y - auxBounds.height - 0.01f;
+                    player.endJump();
+                    player.setVelocityY(0);
+                }
+            }
+        }
+
+        player.setPosition(auxBounds.x, auxBounds.y);
     }
 
     private void colisaoAtaque(Rectangle playerAtack, Inimigo inimigo){
@@ -184,9 +219,19 @@ public class TelaTeste implements Screen {
                 if(!inimigo.wasHited()){
                     inimigo.decreaseLife(1);
                     inimigo.setWasHited(true);
+
+                    player.attackKnockback();
                 }
 
             }
+        }
+    }
+
+    private void colisaoInimigoPlayer(Rectangle playerBounds, Inimigo inimigo){
+        Rectangle hitBoxInimigo = inimigo.getHitboxRect();
+
+        if(playerBounds.overlaps(hitBoxInimigo)){
+            player.attackKnockback();
         }
     }
 }
