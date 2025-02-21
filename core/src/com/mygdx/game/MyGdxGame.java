@@ -37,6 +37,7 @@ public class MyGdxGame extends Game {
 		assetManager.load("Wraith_idle.png", Texture.class);
 		assetManager.load("bg_menu.png", Texture.class);
 		assetManager.load("Skeleton enemy.png", Texture.class);
+		assetManager.load("attack_sprite.png", Texture.class);
 
 		assetManager.finishLoading();
 

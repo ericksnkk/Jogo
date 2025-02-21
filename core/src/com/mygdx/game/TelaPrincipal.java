@@ -25,7 +25,7 @@ public class TelaPrincipal implements Screen {
 
         shape = new ShapeRenderer();
 
-        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), 100, 50);
+        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), game.assetManager.get("attack_sprite.png", Texture.class) ,100, 50);
         playerController = new PlayerController(player);
         Gdx.input.setInputProcessor(playerController);
     }

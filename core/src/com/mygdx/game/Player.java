@@ -11,15 +11,24 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 
 public class Player {
     final float MAX_SPEED = 300;//350;
-    final float DASH_FORCE = 3;
+    final float DASH_FORCE = 3.5f;
+
+    final float DASH_TIMER = 0.2f,
+                ATTACK_TIMER = 0.15f,
+                JUMP_TIMER = 0.35f,
+                KNOCKBACK_TIMER = 0.15f;
+
+    final float DASH_DELAY = 0.45f,
+                ATTACK_DELAY = 0.4f;
+
 
     private Texture texture;
-    private Sprite sprite;
+    private Sprite sprite, attack_sprite;
     private Vector2 velocity;
     private float velocityBoost;
     private float speed;
     private float jumpSpeed;
-    private boolean onGround, isAttacking, onKnockback;
+    private boolean onGround, isAttacking, onKnockback, isDashing;
     private boolean doubleJump, invulnerable;
     private float gravity;
     private int spriteDirection, direction, lookDirection; // 1 para direita, -1 para esquerda
@@ -35,13 +44,17 @@ public class Player {
     private float stateTime;
     private boolean isIdle, isWalking;
 
-    public Player(Texture texture, float startX, float startY) {
+    public Player(Texture texture, Texture attack_texture ,float startX, float startY) {
         sprite = new Sprite(texture);
+        attack_sprite = new Sprite(attack_texture);
 
         this.scale = 1f / 4f;
         sprite.setScale(scale);
         sprite.setOrigin(0, 0);
         sprite.setPosition(startX, startY);
+        attack_sprite.setScale(1f / 2f);
+        attack_sprite.setOrigin(0, 0);
+        attack_sprite.setPosition(startX, startY);
 
         velocity = new Vector2(0, 0);
         velocity.x = MAX_SPEED;
@@ -53,6 +66,7 @@ public class Player {
         onGround = false;
         isAttacking = false;
         onKnockback = false;
+        isDashing = false;
         doubleJump = true;
         invulnerable = false;
         gravity = -4500; // Gravidade
@@ -88,11 +102,12 @@ public class Player {
         else {
             sprite.translateX(spriteDirection * -velocityBoost * velocity.x * deltaTime);
             knockbackTimer += deltaTime;
-            if(knockbackTimer > 0.15){
+            if(knockbackTimer > KNOCKBACK_TIMER){
                 onKnockback = false;
             }
         }
 
+        //Reduz constantemente qualquer aumento na velocidade do player
         if(velocityBoost > 1){
             velocityBoost -= velocityBoost * deltaTime * 3;
             if(velocityBoost < 1){
@@ -109,16 +124,17 @@ public class Player {
             velocity.y = -1000;
         }
 
-        if(jumpTimer < 0.35){
+        //Timers e delays
+        if(jumpTimer < JUMP_TIMER){
             jumpTimer += deltaTime;
             velocity.y += (1400 / (jumpTimer + 0.2f)) * deltaTime;
         }
 
-        if (attackTimer < 0.15) {
+        if (attackTimer < ATTACK_TIMER) {
             attackTimer += deltaTime;
         } else if (isAttacking) {
             isAttacking = false;
-            attackDelay = 0.4f;
+            attackDelay = ATTACK_DELAY;
         }
         if (attackDelay > 0) {
             attackDelay -= deltaTime;
@@ -126,23 +142,30 @@ public class Player {
             attackDelay = 0;
         }
 
-        if(dashTimer < 0.15){
+        if(dashTimer < DASH_TIMER){
             dashTimer += deltaTime;
             velocity.y = 0;
 
         } else if(dashTimer != 1){
             dashTimer = 1;
-            velocityBoost = 1;
+            isDashing = false;
+            //velocityBoost = 1;
+            dashDelay = DASH_DELAY;
         }
 
         if(dashDelay > 0){
             dashDelay -= deltaTime;
         }
+        else if(dashDelay != 0){
+            dashDelay = 0;
+        }
 
-        // Posicao vertical
+        // Atualiza posicao vertical
         sprite.translateY(velocity.y * deltaTime);
 
+
         //Impedir que passe o chao
+        //Subtituir em algum momento
         if (sprite.getY() <= -20) {
             sprite.setY(-20);
             velocity.y = 0;
@@ -180,7 +203,20 @@ public class Player {
                 sprite.flip(false, false);  // Sem flip (para direita)
             }
         }
+        if(isAttacking){
+
+            if(spriteDirection == -1){
+                attack_sprite.setPosition(sprite.getX() - attack_sprite.getWidth() * 1f/2f + 15, sprite.getY());
+                //attack_sprite.flip(true, false);
+                attack_sprite.setFlip(true, false);
+            } else {
+                attack_sprite.setPosition(sprite.getX() + sprite.getWidth() * scale - 15, sprite.getY());
+                attack_sprite.setFlip(false, false);
+            }
+            attack_sprite.draw(batch);
+        }
         sprite.draw(batch);
+
     }
 
     public void startJump() {
@@ -207,10 +243,14 @@ public class Player {
     }
 
     public void dash(){
-        dashTimer = 0;
-        velocity.y = 0;
-        jumpTimer = 1;
-        velocityBoost = DASH_FORCE;
+        if (!isDashing && dashDelay == 0) {
+            dashTimer = 0;
+            velocity.y = 0;
+            jumpTimer = 1;
+            isDashing = true;
+            velocityBoost = DASH_FORCE;
+        }
+
     }
 
     public void attackKnockback(){
@@ -260,6 +300,10 @@ public class Player {
         return new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale);
     }
 
+    public Rectangle getPlayerHitBox(){
+        return new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale);
+    }
+
     public Rectangle getAttackHitBox() {
         if(!onGround && lookDirection == -1){
             return new Rectangle(sprite.getX() - 10,
@@ -268,9 +312,15 @@ public class Player {
                                 45);
         }
         if (spriteDirection == 1) {
-            return new Rectangle(sprite.getX() + (sprite.getWidth() * scale) - 10, sprite.getY(), 35, this.sprite.getHeight() * scale);
+            return new Rectangle(sprite.getX() + (sprite.getWidth() * scale) - 10,
+                                    sprite.getY(),
+                                    100,
+                                    this.sprite.getHeight() * scale);
         } else {
-            return new Rectangle(sprite.getX() - 25, sprite.getY(), 35, this.sprite.getHeight() * scale);
+            return new Rectangle(sprite.getX() - 90,
+                                    sprite.getY(),
+                                    100,
+                                    this.sprite.getHeight() * scale);
         }
     }
 

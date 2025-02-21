@@ -34,7 +34,7 @@ public class TelaTeste implements Screen {
 
     private Rectangle[] plataformas = new Rectangle[15], paredes = new Rectangle[10];
     private int nPlataformas, nParedes;
-    private boolean debugMode = false;
+    private boolean debugMode = true;
 
     public TelaTeste(final MyGdxGame game) {
         this.game = game;
@@ -61,7 +61,7 @@ public class TelaTeste implements Screen {
         plataformas[6] = new Rectangle(3006*MAP_SCALE, 48 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
 
         inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 3000 * MAP_SCALE, 16 * MAP_SCALE);
-        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), 2500 * MAP_SCALE, 300);
+        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), game.assetManager.get("attack_sprite.png", Texture.class) ,2500 * MAP_SCALE, 300);
 
         playerController = new PlayerController(player);
         Gdx.input.setInputProcessor(playerController);
@@ -115,7 +115,7 @@ public class TelaTeste implements Screen {
         game.batch.end();
 
         shape.setProjectionMatrix(game.camera.combined);
-        shape.begin(ShapeRenderer.ShapeType.Filled);        //Renderiza shapes na tela
+        shape.begin(ShapeRenderer.ShapeType.Line);        //Renderiza shapes na tela
 
 
         if (player.isAttacking()) {
@@ -139,6 +139,11 @@ public class TelaTeste implements Screen {
                 shape.setColor(Color.ORANGE);
                 shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
             }
+
+            playerBounds = player.getPlayerBounds();
+            shape.setColor(Color.WHITE);
+            shape.rect(playerBounds.x, playerBounds.y, playerBounds.width, playerBounds.height);
+
 
             shape.end();
         }
