@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 public class Player {
     final float MAX_SPEED = 300;//350;
     final float DASH_FORCE = 3.5f;
+    final float FINAL_FALL_VELOCITY = -1300;
 
     final float DASH_TIMER = 0.2f,
                 ATTACK_TIMER = 0.15f,
@@ -22,16 +23,15 @@ public class Player {
                 ATTACK_DELAY = 0.4f;
 
 
-    private Texture texture;
     private Sprite sprite, attack_sprite;
     private Vector2 velocity;
     private float velocityBoost;
     private float speed;
     private float jumpSpeed;
-    private boolean onGround, isAttacking, onKnockback, isDashing;
+    private boolean onGround, isAttacking, onKnockback, isDashing, onAction;
     private boolean doubleJump, invulnerable;
     private float gravity;
-    private int spriteDirection, direction, lookDirection; // 1 para direita, -1 para esquerda
+    private int spriteDirection, direction, lookDirection, fixDirection; // 1 para direita, -1 para esquerda
     private float scale;
     private float jumpTimer, attackTimer, dashTimer, knockbackTimer;
     private float attackDelay, dashDelay;
@@ -62,6 +62,7 @@ public class Player {
         speed = 350; // Velocidade
         direction = 0;
         lookDirection = 0;
+        fixDirection = 0;
         jumpSpeed = 650; // Velocidade do pulo
         onGround = false;
         isAttacking = false;
@@ -69,6 +70,7 @@ public class Player {
         isDashing = false;
         doubleJump = true;
         invulnerable = false;
+        onAction = false;  //true se estiver dashando ou atacando
         gravity = -4500; // Gravidade
         jumpTimer = 1;
         attackTimer = 1;
@@ -89,15 +91,20 @@ public class Player {
     }
 
     public void update(float deltaTime) {
-        System.out.println(velocityBoost);
-
+        System.out.println(this.velocity.y);
         stateTime += deltaTime;
         isWalking = velocity.x != 0;
         isIdle = !isWalking;
 
         // Atualiza a posição do jogador com base na velocidade horizontal
         if(!onKnockback){
-            sprite.translateX(direction * velocityBoost * velocity.x * deltaTime);
+            if(!isDashing){
+                sprite.translateX(direction * velocityBoost * velocity.x * deltaTime);
+            }
+            else {
+                sprite.translateX(fixDirection * velocityBoost * velocity.x * deltaTime);
+            }
+
         }
         else {
             sprite.translateX(spriteDirection * -velocityBoost * velocity.x * deltaTime);
@@ -115,14 +122,9 @@ public class Player {
             }
         }
 
-
         //Gravidade
-        if (!onGround) {
-            velocity.y += gravity * deltaTime;
-        }
-        else {
-            velocity.y = -1000;
-        }
+        velocity.y += gravity * deltaTime;
+
 
         //Timers e delays
         if(jumpTimer < JUMP_TIMER){
@@ -133,8 +135,10 @@ public class Player {
         if (attackTimer < ATTACK_TIMER) {
             attackTimer += deltaTime;
         } else if (isAttacking) {
+            fixDirection = 0;
             isAttacking = false;
             attackDelay = ATTACK_DELAY;
+            onAction = false;
         }
         if (attackDelay > 0) {
             attackDelay -= deltaTime;
@@ -147,10 +151,11 @@ public class Player {
             velocity.y = 0;
 
         } else if(dashTimer != 1){
+            fixDirection = 0;
             dashTimer = 1;
             isDashing = false;
-            //velocityBoost = 1;
             dashDelay = DASH_DELAY;
+            onAction = false;
         }
 
         if(dashDelay > 0){
@@ -161,18 +166,21 @@ public class Player {
         }
 
         // Atualiza posicao vertical
+        if(velocity.y < FINAL_FALL_VELOCITY){
+            velocity.y = FINAL_FALL_VELOCITY;
+        }
         sprite.translateY(velocity.y * deltaTime);
 
 
         //Impedir que passe o chao
         //Subtituir em algum momento
-        if (sprite.getY() <= -20) {
-            sprite.setY(-20);
-            velocity.y = 0;
-            onGround = true;
-            doubleJump = true;
-            jumpTimer = 1;
-        }
+//        if (sprite.getY() <= -20) {
+//            sprite.setY(-20);
+//            velocity.y = 0;
+//            onGround = true;
+//            doubleJump = true;
+//            jumpTimer = 1;
+//        }
 
 
         // Controle da direção do sprite (esquerda ou direita)
@@ -180,6 +188,9 @@ public class Player {
             spriteDirection = -1; // Personagem olha para a esquerda
         } else if (direction > 0 && spriteDirection != 1) {
             spriteDirection = 1; // Personagem olha para a direita
+        }
+        if(fixDirection != 0){
+            spriteDirection = fixDirection;
         }
     }
 
@@ -224,15 +235,18 @@ public class Player {
     }
 
     public void startJump() {
-        if (onGround) {
-            velocity.y = jumpSpeed;
-            onGround = false;
-            jumpTimer = 0;
-        } else if (doubleJump){
-            velocity.y = jumpSpeed;
-            jumpTimer = 0.1f;
-            doubleJump = false;
+        if(!onAction){
+            if (onGround) {
+                velocity.y = jumpSpeed;
+                onGround = false;
+                jumpTimer = 0;
+            } else if (doubleJump){
+                velocity.y = jumpSpeed;
+                jumpTimer = 0.1f;
+                doubleJump = false;
+            }
         }
+
     }
 
     public void endJump() {
@@ -240,27 +254,43 @@ public class Player {
     }
 
     public void attack() {
-        if (!isAttacking && attackDelay == 0) {
-            isAttacking = true;
-            attackTimer = 0;
+        if(!onAction){
+            if (!isAttacking && attackDelay == 0) {
+                fixDirection = spriteDirection;
+                isAttacking = true;
+                attackTimer = 0;
+                onAction = true;
+            }
         }
+
     }
 
     public void dash(){
-        if (!isDashing && dashDelay == 0) {
-            dashTimer = 0;
-            velocity.y = 0;
-            jumpTimer = 1;
-            isDashing = true;
-            velocityBoost = DASH_FORCE;
+        if(!onAction){
+            if (!isDashing && dashDelay == 0) {
+                fixDirection = spriteDirection; //Salva ultima direcao q o player olhou
+                dashTimer = 0;
+                velocity.y = 0;
+                jumpTimer = 1;
+                isDashing = true;
+                velocityBoost = DASH_FORCE;
+                onAction = true;
+            }
         }
+
 
     }
 
     public void attackKnockback(){
         onKnockback = true;
         knockbackTimer = 0;
-        velocityBoost = 1.15f;
+
+        if(lookDirection == -1){
+            velocity.y = 2000;
+        }
+        else {
+            velocityBoost = 1.15f;
+        }
     }
 
     public boolean isAttacking() {
@@ -277,7 +307,11 @@ public class Player {
 
     public void setOnGround(boolean onGround) {
         this.onGround = onGround;
-        this.doubleJump = true;
+        if(onGround){
+            velocity.y=0;
+            this.doubleJump = true;
+        }
+
     }
 
     public void setVelocityY(float verticalSpeed) {

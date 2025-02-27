@@ -60,7 +60,7 @@ public class TelaTeste implements Screen {
         plataformas[5] = new Rectangle(2768*MAP_SCALE, 112 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
         plataformas[6] = new Rectangle(3006*MAP_SCALE, 48 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
 
-        inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 3000 * MAP_SCALE, 16 * MAP_SCALE);
+        inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 2500 * MAP_SCALE, 16 * MAP_SCALE);
         player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), game.assetManager.get("attack_sprite.png", Texture.class) ,2500 * MAP_SCALE, 300);
 
         playerController = new PlayerController(player);
@@ -216,6 +216,9 @@ public class TelaTeste implements Screen {
                     player.endJump();
                     player.setVelocityY(0);
                 }
+            }
+            else if(player.getVelocityY() < 0){
+                player.setOnGround(false);
             }
         }
 
