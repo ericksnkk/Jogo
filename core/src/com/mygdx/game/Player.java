@@ -10,7 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 
 public class Player {
-    final float MAX_SPEED = 300;//350;
+    final float MAX_SPEED = 325;//300;
     final float DASH_FORCE = 3.5f;
     final float FINAL_FALL_VELOCITY = -1300;
 
@@ -43,12 +43,13 @@ public class Player {
 
     private float stateTime;
     private boolean isIdle, isWalking;
+    AtlasRegion frame;
 
     public Player(Texture texture, Texture attack_texture ,float startX, float startY) {
         sprite = new Sprite(texture);
         attack_sprite = new Sprite(attack_texture);
 
-        this.scale = 1f / 4f;
+        this.scale = 1.5f / 4f;
         sprite.setScale(scale);
         sprite.setOrigin(0, 0);
         sprite.setPosition(startX, startY);
@@ -80,7 +81,7 @@ public class Player {
         spriteDirection = 1; // Inicialmente o personagem olha para a direita
 
         // Carregar animações
-        idleAtlas = new TextureAtlas("IdleAnimation/Idle.atlas");
+        idleAtlas = new TextureAtlas("IdleAnimation/idlev2.atlas");
         idleAnimation = new Animation<>(0.1f, idleAtlas.getRegions());
         walkingAtlas = new TextureAtlas("WalkingAnimation/Walking.atlas");
         walkingAnimation = new Animation<>(0.1f, walkingAtlas.getRegions());
@@ -93,7 +94,7 @@ public class Player {
     public void update(float deltaTime) {
         System.out.println(this.velocity.y);
         stateTime += deltaTime;
-        isWalking = velocity.x != 0;
+        isWalking = direction != 0;
         isIdle = !isWalking;
 
         // Atualiza a posição do jogador com base na velocidade horizontal
@@ -197,23 +198,13 @@ public class Player {
     public void render(SpriteBatch batch) {
         // Se estiver andando, mostra a animação de walking
         if (isWalking) {
-            if (spriteDirection == -1) {
-                sprite.setRegion(walkingAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(true, false);  // Flip horizontal para a esquerda
-            } else {
-                sprite.setRegion(walkingAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(false, false);  // Sem flip (para direita)
-            }
-        } else if (isIdle) {
-            // Se estiver em idle, mostra a animação de idle na direção correta
-            if (spriteDirection == -1) {
-                sprite.setRegion(idleAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(true, false);  // Flip horizontal para a esquerda
-            } else {
-                sprite.setRegion(idleAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(false, false);  // Sem flip (para direita)
-            }
+            frame = walkingAnimation.getKeyFrame(stateTime,true);
+        }else{
+            frame = idleAnimation.getKeyFrame(stateTime,true);
         }
+        sprite.setRegion(frame);
+        sprite.setSize(frame.getRegionWidth() * scale * 15, frame.getRegionHeight() * scale * 15);
+
         if(isAttacking){
             if(!onGround && lookDirection == -1){
                 attack_sprite.setRotation(-90);
@@ -229,6 +220,11 @@ public class Player {
                 attack_sprite.setFlip(false, false);
             }
             attack_sprite.draw(batch);
+        }
+        if(spriteDirection == -1 && !sprite.isFlipX()){
+            sprite.flip(true, false);
+        } else if (spriteDirection == 1 && sprite.isFlipX()) {
+            sprite.flip(true, false);
         }
         sprite.draw(batch);
 
