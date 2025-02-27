@@ -1,0 +1,9 @@
+jump.png
+size:128,64
+repeat:none
+jump
+bounds:2,2,40,44
+jump
+bounds:84,3,36,43
+jump
+bounds:44,3,38,43

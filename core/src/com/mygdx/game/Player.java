@@ -40,6 +40,8 @@ public class Player {
     private Animation<AtlasRegion> idleAnimation;
     private TextureAtlas walkingAtlas;
     private Animation<AtlasRegion> walkingAnimation;
+    private TextureAtlas jumpingAtlas;
+    private Animation<AtlasRegion> jumpingAnimation;
 
     private float stateTime;
     private boolean isIdle, isWalking;

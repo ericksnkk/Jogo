@@ -1,0 +1,9 @@
+falling.png
+size:64,256
+repeat:none
+falling
+bounds:2,130,45,66
+falling
+bounds:2,66,45,62
+falling
+bounds:2,2,47,62
