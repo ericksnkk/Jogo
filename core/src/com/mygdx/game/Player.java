@@ -10,14 +10,14 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 
 public class Player {
-    final float MAX_SPEED = 300;//350;
+    final float MAX_SPEED = 325;//300;
     final float DASH_FORCE = 3.5f;
     final float FINAL_FALL_VELOCITY = -1300;
 
     final float DASH_TIMER = 0.2f,
-                ATTACK_TIMER = 0.1f,
-                JUMP_TIMER = 0.35f,
-                KNOCKBACK_TIMER = 0.15f;
+            JUMP_TIMER = 0.35f,
+            ATTACK_TIMER = 0.1f,
+            KNOCKBACK_TIMER = 0.15f;
 
     final float DASH_DELAY = 0.45f,
                 ATTACK_DELAY = 0.35f;
@@ -28,7 +28,7 @@ public class Player {
     private float velocityBoost;
     private float speed;
     private float jumpSpeed;
-    private boolean onGround, isAttacking, onKnockback, isDashing, onAction;
+    private boolean onGround, isAttacking, onKnockback, isDashing, onAction, isjumping, isfalling;
     private boolean doubleJump, invulnerable;
     private float gravity;
     private int spriteDirection, direction, lookDirection, fixDirection; // 1 para direita, -1 para esquerda
@@ -41,15 +41,20 @@ public class Player {
     private Animation<AtlasRegion> idleAnimation;
     private TextureAtlas walkingAtlas;
     private Animation<AtlasRegion> walkingAnimation;
+    private TextureAtlas jumpingAtlas;
+    private Animation<AtlasRegion> jumpingAnimation;
+    private TextureAtlas fallingAtlas;
+    private Animation<AtlasRegion> fallingAnimation;
 
     private float stateTime;
     private boolean isIdle, isWalking;
+    AtlasRegion frame;
 
     public Player(Texture texture, Texture attack_texture ,float startX, float startY) {
         sprite = new Sprite(texture);
         attack_sprite = new Sprite(attack_texture);
 
-        this.scale = 1f / 4f;
+        this.scale = 1.5f / 4f;
         sprite.setScale(scale);
         sprite.setOrigin(0, 0);
         sprite.setPosition(startX, startY);
@@ -81,20 +86,26 @@ public class Player {
         spriteDirection = 1; // Inicialmente o personagem olha para a direita
 
         // Carregar animações
-        idleAtlas = new TextureAtlas("IdleAnimation/Idle.atlas");
+        idleAtlas = new TextureAtlas("IdleAnimation/idlev2.atlas");
         idleAnimation = new Animation<>(0.1f, idleAtlas.getRegions());
         walkingAtlas = new TextureAtlas("WalkingAnimation/Walking.atlas");
         walkingAnimation = new Animation<>(0.1f, walkingAtlas.getRegions());
+        jumpingAtlas = new TextureAtlas("JumpAnimation/jump.atlas");
+        jumpingAnimation = new Animation<>(0.1f, jumpingAtlas.getRegions());
+        fallingAtlas = new TextureAtlas("FallingAnimation/falling.atlas");
+        fallingAnimation = new Animation<>(0.1f, fallingAtlas.getRegions());
 
         stateTime = 0;
         isIdle = true;
         isWalking = false;
+        isjumping = false;
+        isfalling = false;
     }
 
     public void update(float deltaTime) {
         System.out.println(this.sprite.getX() + "   " + this.sprite.getY() + "  " + lookDirection);
         stateTime += deltaTime;
-        isWalking = velocity.x != 0;
+        isWalking = direction != 0;
         isIdle = !isWalking;
 
         // Atualiza a posição do jogador com base na velocidade horizontal
@@ -131,6 +142,14 @@ public class Player {
         if(jumpTimer < JUMP_TIMER){
             jumpTimer += deltaTime;
             velocity.y += (1400 / (jumpTimer + 0.2f)) * deltaTime;
+            isjumping = true;
+            isfalling = false;
+        }else if(velocity.y < 0 && !onGround){
+            isjumping = false;
+            isfalling = true;
+        }else if(onGround){
+            isjumping = false;
+            isfalling = false;
         }
 
         if (attackTimer < ATTACK_TIMER) {
@@ -187,23 +206,15 @@ public class Player {
 
     public void render(SpriteBatch batch) {
         // Se estiver andando, mostra a animação de walking
-        if (isWalking) {
-            if (spriteDirection == -1) {
-                sprite.setRegion(walkingAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(true, false);  // Flip horizontal para a esquerda
-            } else {
-                sprite.setRegion(walkingAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(false, false);  // Sem flip (para direita)
-            }
-        } else if (isIdle) {
-            // Se estiver em idle, mostra a animação de idle na direção correta
-            if (spriteDirection == -1) {
-                sprite.setRegion(idleAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(true, false);  // Flip horizontal para a esquerda
-            } else {
-                sprite.setRegion(idleAnimation.getKeyFrame(stateTime, true));
-                sprite.flip(false, false);  // Sem flip (para direita)
-            }
+        if(isjumping) {
+            frame = jumpingAnimation.getKeyFrame(stateTime, false);
+        }
+        else if(isfalling) {
+            frame = fallingAnimation.getKeyFrame(stateTime, false);
+        }else if(isWalking) {
+            frame = walkingAnimation.getKeyFrame(stateTime,true);
+        }else{
+            frame = idleAnimation.getKeyFrame(stateTime,true);
         }
 
         if(isAttacking){
@@ -223,6 +234,16 @@ public class Player {
             }
             attack_sprite.draw(batch);
         }
+        sprite.setRegion(frame);
+        sprite.setSize(frame.getRegionWidth() * scale * 15, frame.getRegionHeight() * scale * 15);
+
+        if(spriteDirection == -1 && !sprite.isFlipX()){
+            sprite.flip(true, false);
+        } else if (spriteDirection == 1 && sprite.isFlipX()) {
+            sprite.flip(true, false);
+        }
+
+
         sprite.draw(batch);
 
     }
@@ -300,7 +321,7 @@ public class Player {
         knockbackTimer = 0;
 
         if(lookDirection == -1){
-            velocity.y = 1400;
+            velocity.y = 2000;
         }
         else {
             velocityBoost = 1.15f;
@@ -391,5 +412,7 @@ public class Player {
     public void dispose() {
         idleAtlas.dispose();
         walkingAtlas.dispose();
+        jumpingAtlas.dispose();
+        fallingAtlas.dispose();
     }
 }
