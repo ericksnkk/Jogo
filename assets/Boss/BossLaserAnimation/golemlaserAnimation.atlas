@@ -1,0 +1,17 @@
+golemlaserAnimation.png
+size:512,64
+repeat:none
+golemlaser0
+bounds:252,2,48,46
+golemlaser1
+bounds:102,2,48,46
+golemlaser2
+bounds:2,2,48,46
+golemlaser3
+bounds:202,2,48,46
+golemlaser4
+bounds:52,2,48,46
+golemlaser5
+bounds:302,2,48,46
+golemlaser6
+bounds:152,2,48,46

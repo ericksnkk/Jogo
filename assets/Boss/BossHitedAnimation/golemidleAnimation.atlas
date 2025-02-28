@@ -1,0 +1,11 @@
+golemidleAnimation.png
+size:256,64
+repeat:none
+idle1
+bounds:52,2,48,46
+idle0
+bounds:52,2,48,46
+idle2
+bounds:2,2,48,46
+idle3
+bounds:102,2,48,46
