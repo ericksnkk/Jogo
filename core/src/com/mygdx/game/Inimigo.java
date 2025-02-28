@@ -4,45 +4,40 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
-public class Inimigo {
-    private Sprite sprite;
-    private Texture texture;
-    private float scale;
-    private Rectangle hitboxRect;
-    private int height, width;
-    private boolean isAlive, wasHited;
-    private int life;
-    private float speed = 100f;
-    private int direction =1;
+public abstract class Inimigo {
+    protected Sprite sprite;
+    protected float scale;
+    protected Rectangle hitboxRect;
+    protected boolean isAlive, wasHited;
+    protected int life;
+    protected float speed;
 
-    public Inimigo(Texture texture, float startX, float startY) {
-        sprite = new Sprite(texture);
+    public Inimigo(Texture texture, float startX, float startY, float scale, float speed, int life) {
+        this.sprite = new Sprite(texture);
+        this.scale = scale;
+        this.speed = speed;
+        this.life = life;
+        this.isAlive = true;
+        this.wasHited = false;
 
-        this.scale = 2f;
         sprite.setScale(scale);
-        sprite.setOrigin(0,0);
+        sprite.setOrigin(0, 0);
         sprite.setPosition(startX, startY);
-
-        isAlive = true;
-        wasHited = false;
-        life = 100;
-
-        hitboxRect = new Rectangle();
+        atualizaHitbox();
     }
 
-    public void update(float deltaTime) {
-        if(life <= 0) {
-            isAlive = false;
-        }
+    protected void atualizaHitbox() {
+        hitboxRect = new Rectangle(sprite.getX() - 5, sprite.getY() - 5,
+                sprite.getWidth() * scale + 10,
+                sprite.getHeight() * scale + 10);
+    }
 
-//        if(sprite.getX()<= 2900 * 3){
-//            direction = 1;
-//        }else if(sprite.getX()>=3100 * 3){
-//            direction = -1;
-//        }
-        //sprite.setPosition(sprite.getX() + (direction * speed * deltaTime), sprite.getY());
-        hitboxRect = new Rectangle(sprite.getX() - 10, sprite.getY() - 10, (sprite.getWidth() * scale) + 20, (sprite.getHeight() * scale) + 20);
+    public abstract void update(float deltaTime, Player player, Rectangle[] obstacles, Rectangle cameraBounds);
+
+    public void draw(SpriteBatch batch) {
+        sprite.draw(batch);
     }
 
     public Rectangle getHitboxRect() {
@@ -63,14 +58,17 @@ public class Inimigo {
 
     public void decreaseLife(int dano) {
         life -= dano;
+        if (life <= 0) {
+            isAlive = false;
+        }
     }
 
     public void setWasHited(boolean wasHited) {
         this.wasHited = wasHited;
     }
 
-    public void draw(SpriteBatch batch) {
-        sprite.draw(batch);
+    public Vector2 getCenterPosition() {
+        return new Vector2(sprite.getX() + sprite.getWidth() * scale / 2,
+                sprite.getY() + sprite.getHeight() * scale / 2);
     }
-
 }

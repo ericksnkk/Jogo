@@ -16,6 +16,7 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class TelaTeste implements Screen {
     final MyGdxGame game;
     private Player player;
     private PlayerController playerController;
-    private Inimigo inimigo;
+    private Array<Inimigo> inimigos;
 
     private ShapeRenderer shape;
 
@@ -62,11 +63,19 @@ public class TelaTeste implements Screen {
         plataformas[7] = new Rectangle(2416*MAP_SCALE, 208 * MAP_SCALE, 128 * MAP_SCALE, 16*MAP_SCALE);
         plataformas[8] = new Rectangle(2016*MAP_SCALE, 256 * MAP_SCALE, 352 * MAP_SCALE, 16*MAP_SCALE);
 
-        inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 2500 * MAP_SCALE, 16 * MAP_SCALE);
         player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), game.assetManager.get("attack_sprite.png", Texture.class) ,2500 * MAP_SCALE, 300);
 
         playerController = new PlayerController(player);
         Gdx.input.setInputProcessor(playerController);
+
+        inimigos = new Array<Inimigo>();
+        inimigos.add(new InimigoTerrestre(
+                game.assetManager.get("Skeleton enemy.png", Texture.class),
+                3000 * MAP_SCALE, 16 * MAP_SCALE));
+        // Adiciona um inimigo voador
+        inimigos.add(new InimigoVoador(
+                game.assetManager.get("Skeleton enemy.png", Texture.class),
+                2800 * MAP_SCALE, 500));
     }
 
     @Override
@@ -82,38 +91,48 @@ public class TelaTeste implements Screen {
         tmr.setView(game.camera);
         tmr.render();
 
+        Rectangle[] colisoes = {paredes[0], paredes[1], paredes[2],
+                plataformas[0], plataformas[1], plataformas[2], plataformas[3],
+                plataformas[4], plataformas[5], plataformas[6], plataformas[7],
+                plataformas[8]};
+
         Rectangle previousPlayerBounds = player.getPlayerBounds(); //Posicao antiga do player para usa na colisao
 
-        //Updates do jogo
+        float camX = game.camera.position.x - game.camera.viewportWidth / 2;
+        float camY = game.camera.position.y - game.camera.viewportHeight / 2;
+        Rectangle cameraBounds = new Rectangle(camX, camY, game.camera.viewportWidth, game.camera.viewportHeight);
+
         player.update(delta);
-        inimigo.update(delta);
+        for (Inimigo inimigo : inimigos) {
+            inimigo.update(delta, player, colisoes, cameraBounds);
+        }
 
         //Get hitbox para colisao
         Rectangle playerBounds = player.getPlayerBounds();
-        Rectangle playerHitBox;
-        Rectangle hitboxInimigo = inimigo.getHitboxRect();
+        Rectangle playerHitbox = player.getPlayerHitBox();
+        detectarColisao(playerBounds, previousPlayerBounds, colisoes);
 
-        Rectangle[] r = {paredes[0], paredes[1], paredes[2],
-                        plataformas[0], plataformas[1], plataformas[2], plataformas[3], plataformas[4], plataformas[5], plataformas[6],
-                        plataformas[7], plataformas[8]};
+        //Updates do jogo
 
-        detectarColisao(playerBounds, previousPlayerBounds, r);
 
         if(!player.isAttacking()){ //Reseta o Foi Atacado de todos os inimigos
-            inimigo.setWasHited(false);
+            for (Inimigo inimigo : inimigos) {
+                inimigo.setWasHited(false);
+            }
         }
         else {
             Rectangle attackHitBox = player.getAttackHitBox();
-            colisaoAtaque(attackHitBox, inimigo);
+            for (Inimigo inimigo : inimigos) {
+                colisaoAtaque(attackHitBox, inimigo);
+            }
         }
-
-        playerHitBox = player.getPlayerHitBox();
-        colisaoInimigoPlayer(playerHitBox, inimigo);
 
 
         game.batch.begin();                                 //Renderiza sprites na tela
-        if(inimigo.isAlive()){
-            inimigo.draw(game.batch);
+        for (Inimigo inimigo : inimigos) {
+            if (inimigo.isAlive()) {
+                inimigo.draw(game.batch);
+            }
         }
         player.render(game.batch);
 
@@ -145,9 +164,19 @@ public class TelaTeste implements Screen {
                 shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
             }
 
-            if (inimigo.isAlive()) {
-                shape.setColor(Color.ORANGE);
-                shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
+            for (Inimigo inimigo : inimigos) {
+                if (inimigo.isAlive()) {
+                    shape.setColor(Color.ORANGE);
+                    Rectangle hitboxInimigo = inimigo.getHitboxRect();
+                    shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
+                    // Se o inimigo for voador, desenha os círculos de detecção
+                    if (inimigo instanceof InimigoVoador) {
+                        ((InimigoVoador) inimigo).desenharAreas(shape);
+                    }
+                    if (inimigo instanceof InimigoTerrestre) {
+                        ((InimigoTerrestre) inimigo).desenharAreas(shape);
+                    }
+                }
             }
 
             playerBounds = player.getPlayerBounds();
@@ -155,8 +184,7 @@ public class TelaTeste implements Screen {
             shape.rect(playerBounds.x, playerBounds.y, playerBounds.width, playerBounds.height);
 
             shape.setColor(Color.RED);
-            shape.rect(playerHitBox.x, playerHitBox.y, playerHitBox.width, playerHitBox.height);
-
+            shape.rect(playerHitbox.x, playerHitbox.y, playerHitbox.width, playerHitbox.height);
 
             shape.end();
         }
@@ -243,15 +271,12 @@ public class TelaTeste implements Screen {
 
     private void colisaoAtaque(Rectangle playerAtack, Inimigo inimigo){
         Rectangle hitBoxInimigo = inimigo.getHitboxRect();
-        if(playerAtack.overlaps(hitBoxInimigo)){
-            if(inimigo.isAlive()){
-                if(!inimigo.wasHited()){
-                    inimigo.decreaseLife(1);
-                    inimigo.setWasHited(true);
+        if (playerAtack.overlaps(hitBoxInimigo)) {
+            if (inimigo.isAlive() && !inimigo.wasHited()) {
+                inimigo.decreaseLife(1);
+                inimigo.setWasHited(true);
 
-                    player.attackKnockback();
-                }
-
+                player.attackKnockback();
             }
         }
     }
@@ -260,7 +285,7 @@ public class TelaTeste implements Screen {
         Rectangle hitBoxInimigo = inimigo.getHitboxRect();
 
         if(playerBounds.overlaps(hitBoxInimigo)){
-            //player.attackKnockback();
+            player.attackKnockback();
         }
     }
 }
