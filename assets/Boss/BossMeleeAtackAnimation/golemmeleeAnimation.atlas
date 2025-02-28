@@ -1,0 +1,17 @@
+golemmeleeAnimation.png
+size:512,64
+repeat:none
+melee0
+bounds:166,4,48,46
+melee1
+bounds:266,4,48,46
+melee2
+bounds:216,4,48,46
+melee3
+bounds:116,4,48,46
+melee4
+bounds:316,4,47,46
+melee5
+bounds:65,4,49,46
+melee6
+bounds:2,2,61,48
