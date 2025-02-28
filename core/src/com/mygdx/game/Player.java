@@ -15,12 +15,12 @@ public class Player {
     final float FINAL_FALL_VELOCITY = -1300;
 
     final float DASH_TIMER = 0.2f,
-                ATTACK_TIMER = 0.15f,
-                JUMP_TIMER = 0.35f,
-                KNOCKBACK_TIMER = 0.15f;
+            ATTACK_TIMER = 0.15f,
+            JUMP_TIMER = 0.35f,
+            KNOCKBACK_TIMER = 0.15f;
 
     final float DASH_DELAY = 0.45f,
-                ATTACK_DELAY = 0.4f;
+            ATTACK_DELAY = 0.4f;
 
 
     private Sprite sprite, attack_sprite;
@@ -28,20 +28,21 @@ public class Player {
     private float velocityBoost;
     private float speed;
     private float jumpSpeed;
-    private boolean onGround, isAttacking, onKnockback, isDashing, onAction;
+    private boolean onGround, isAttacking, onKnockback, isDashing, onAction, isjumping, isfalling;
     private boolean doubleJump, invulnerable;
     private float gravity;
     private int spriteDirection, direction, lookDirection, fixDirection; // 1 para direita, -1 para esquerda
     private float scale;
     private float jumpTimer, attackTimer, dashTimer, knockbackTimer;
     private float attackDelay, dashDelay;
-
     private TextureAtlas idleAtlas;
     private Animation<AtlasRegion> idleAnimation;
     private TextureAtlas walkingAtlas;
     private Animation<AtlasRegion> walkingAnimation;
     private TextureAtlas jumpingAtlas;
     private Animation<AtlasRegion> jumpingAnimation;
+    private TextureAtlas fallingAtlas;
+    private Animation<AtlasRegion> fallingAnimation;
 
     private float stateTime;
     private boolean isIdle, isWalking;
@@ -87,10 +88,16 @@ public class Player {
         idleAnimation = new Animation<>(0.1f, idleAtlas.getRegions());
         walkingAtlas = new TextureAtlas("WalkingAnimation/Walking.atlas");
         walkingAnimation = new Animation<>(0.1f, walkingAtlas.getRegions());
+        jumpingAtlas = new TextureAtlas("JumpAnimation/jump.atlas");
+        jumpingAnimation = new Animation<>(0.1f, jumpingAtlas.getRegions());
+        fallingAtlas = new TextureAtlas("FallingAnimation/falling.atlas");
+        fallingAnimation = new Animation<>(0.1f, fallingAtlas.getRegions());
 
         stateTime = 0;
         isIdle = true;
         isWalking = false;
+        isjumping = false;
+        isfalling = false;
     }
 
     public void update(float deltaTime) {
@@ -133,6 +140,14 @@ public class Player {
         if(jumpTimer < JUMP_TIMER){
             jumpTimer += deltaTime;
             velocity.y += (1400 / (jumpTimer + 0.2f)) * deltaTime;
+            isjumping = true;
+            isfalling = false;
+        }else if(velocity.y < 0 && !onGround){
+            isjumping = false;
+            isfalling = true;
+        }else if(onGround){
+            isjumping = false;
+            isfalling = false;
         }
 
         if (attackTimer < ATTACK_TIMER) {
@@ -199,13 +214,16 @@ public class Player {
 
     public void render(SpriteBatch batch) {
         // Se estiver andando, mostra a animação de walking
-        if (isWalking) {
+        if(isjumping) {
+            frame = jumpingAnimation.getKeyFrame(stateTime, false);
+        }
+        else if(isfalling) {
+            frame = fallingAnimation.getKeyFrame(stateTime, false);
+        }else if(isWalking) {
             frame = walkingAnimation.getKeyFrame(stateTime,true);
         }else{
             frame = idleAnimation.getKeyFrame(stateTime,true);
         }
-        sprite.setRegion(frame);
-        sprite.setSize(frame.getRegionWidth() * scale * 15, frame.getRegionHeight() * scale * 15);
 
         if(isAttacking){
             if(!onGround && lookDirection == -1){
@@ -223,11 +241,16 @@ public class Player {
             }
             attack_sprite.draw(batch);
         }
+        sprite.setRegion(frame);
+        sprite.setSize(frame.getRegionWidth() * scale * 15, frame.getRegionHeight() * scale * 15);
+
         if(spriteDirection == -1 && !sprite.isFlipX()){
             sprite.flip(true, false);
         } else if (spriteDirection == 1 && sprite.isFlipX()) {
             sprite.flip(true, false);
         }
+
+
         sprite.draw(batch);
 
     }
@@ -343,20 +366,20 @@ public class Player {
     public Rectangle getAttackHitBox() {
         if(!onGround && lookDirection == -1){
             return new Rectangle(sprite.getX() - 10,
-                                    sprite.getY() - 90,
-                                sprite.getWidth() * scale + 10,
-                                100);
+                    sprite.getY() - 90,
+                    sprite.getWidth() * scale + 10,
+                    100);
         }
         if (spriteDirection == 1) {
             return new Rectangle(sprite.getX() + (sprite.getWidth() * scale) - 10,
-                                    sprite.getY(),
-                                    100,
-                                    this.sprite.getHeight() * scale);
+                    sprite.getY(),
+                    100,
+                    this.sprite.getHeight() * scale);
         } else {
             return new Rectangle(sprite.getX() - 90,
-                                    sprite.getY(),
-                                    100,
-                                    this.sprite.getHeight() * scale);
+                    sprite.getY(),
+                    100,
+                    this.sprite.getHeight() * scale);
         }
     }
 
@@ -369,5 +392,7 @@ public class Player {
     public void dispose() {
         idleAtlas.dispose();
         walkingAtlas.dispose();
+        jumpingAtlas.dispose();
+        fallingAtlas.dispose();
     }
 }
