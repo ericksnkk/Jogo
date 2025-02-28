@@ -45,6 +45,8 @@ public class Player {
     private Animation<AtlasRegion> jumpingAnimation;
     private TextureAtlas fallingAtlas;
     private Animation<AtlasRegion> fallingAnimation;
+    private TextureAtlas atk1Atlas;
+    private Animation<AtlasRegion> atk1Animation;
 
     private float stateTime;
     private boolean isIdle, isWalking;
@@ -71,7 +73,6 @@ public class Player {
         fixDirection = 0;
         jumpSpeed = 650; // Velocidade do pulo
         onGround = false;
-        isAttacking = false;
         onKnockback = false;
         isDashing = false;
         doubleJump = true;
@@ -94,12 +95,16 @@ public class Player {
         jumpingAnimation = new Animation<>(0.1f, jumpingAtlas.getRegions());
         fallingAtlas = new TextureAtlas("FallingAnimation/falling.atlas");
         fallingAnimation = new Animation<>(0.1f, fallingAtlas.getRegions());
+        atk1Atlas = new TextureAtlas("atk1/atk1.atlas");
+        atk1Animation = new Animation<>(0.1f, atk1Atlas.getRegions());
+
 
         stateTime = 0;
         isIdle = true;
         isWalking = false;
         isjumping = false;
         isfalling = false;
+        isAttacking = false;
     }
 
     public void update(float deltaTime) {
