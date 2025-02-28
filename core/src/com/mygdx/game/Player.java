@@ -32,7 +32,7 @@ public class Player {
     private boolean doubleJump, invulnerable;
     private float gravity;
     private int spriteDirection, direction, lookDirection, fixDirection; // 1 para direita, -1 para esquerda
-    private float scale;
+    private float scale, spriteScale;
     private float jumpTimer, attackTimer, dashTimer, knockbackTimer;
     private float attackDelay, dashDelay;
     private int attackDirection; //1-cima; 2-direita; 3-baixo; 4-esquerda
@@ -65,6 +65,7 @@ public class Player {
         attack_sprite = new Sprite(attack_texture);
 
         this.scale = 1.5f / 4f;
+        spriteScale = 13;
         sprite.setScale(scale);
         sprite.setOrigin(0, 0);
         sprite.setPosition(startX, startY);
@@ -124,7 +125,7 @@ public class Player {
     }
 
     public void update(float deltaTime) {
-        System.out.println(this.sprite.getX() + "   " + this.sprite.getY() + "  " + lookDirection);
+        //System.out.println(this.sprite.getX() + "   " + this.sprite.getY() + "  " + lookDirection);
         stateTime += deltaTime;
         isWalking = direction != 0;
         isIdle = !isWalking;
@@ -137,7 +138,6 @@ public class Player {
             else {
                 sprite.translateX(fixDirection * velocityBoost * velocity.x * deltaTime);
             }
-
         }
         else {
             sprite.translateX(spriteDirection * -velocityBoost * velocity.x * deltaTime);
@@ -232,7 +232,7 @@ public class Player {
         }
         else if(isfalling) {
             frame = fallingAnimation.getKeyFrame(stateTime, false);
-        }else if(isWalking) {
+        }else if(isWalking || isDashing) {
             frame = walkingAnimation.getKeyFrame(stateTime,true);
         }else{
             frame = idleAnimation.getKeyFrame(stateTime,true);
@@ -256,7 +256,8 @@ public class Player {
             attack_sprite.draw(batch);
         }
         sprite.setRegion(frame);
-        sprite.setSize(frame.getRegionWidth() * scale * 15, frame.getRegionHeight() * scale * 15);
+        sprite.setSize(frame.getRegionWidth() * scale * spriteScale, frame.getRegionHeight() * scale * spriteScale);
+        System.out.println(frame.getRegionWidth() + "   " + sprite.getWidth());
 
         if(spriteDirection == -1 && !sprite.isFlipX()){
             sprite.flip(true, false);
@@ -342,7 +343,7 @@ public class Player {
         knockbackTimer = 0;
 
         if(lookDirection == -1){
-            velocity.y = 2000;
+            velocity.y = 1300;
         }
         else {
             velocityBoost = 1.15f;
@@ -379,7 +380,7 @@ public class Player {
     }
 
     public void setPosition(float x, float y) {
-        sprite.setPosition(x, y);
+        sprite.setPosition(x -20, y);
     }
 
     public Sprite getSprite() {
@@ -391,11 +392,14 @@ public class Player {
     }
 
     public Rectangle getPlayerBounds() {
-        return new Rectangle(sprite.getX(), sprite.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale);
+        float middle = (sprite.getWidth() * scale)/2, size = 140 * scale;
+//        return new Rectangle(sprite.getX() + 30, sprite.getY(), size, 16.8f * spriteScale * scale);
+        return new Rectangle(sprite.getX() + 20, sprite.getY(), size, 16.8f * spriteScale * scale);
     }
 
     public Rectangle getPlayerHitBox(){
-        return new Rectangle(sprite.getX() + 10, sprite.getY(), sprite.getWidth() * scale - 20, sprite.getHeight() * scale);
+        float middle = (sprite.getWidth() * scale)/2, size = 140 * scale;
+        return new Rectangle(sprite.getX() + 20 + 10, sprite.getY(), size - 20, 16.8f * spriteScale * scale);
     }
 
     public Rectangle getAttackHitBox() {
