@@ -126,7 +126,7 @@ public class Player {
     }
 
     public void update(float deltaTime) {
-        System.out.println(this.sprite.getX() + "   " + this.sprite.getY() + "  " + sprite.getOriginX() + "  " + sprite.getOriginY());
+        System.out.println(this.sprite.getX() / (3 * 16) + "   " + this.sprite.getY() / (3 * 16));
         //deltaTime = deltaTime/7;
         stateTime += deltaTime;
         isWalking = direction != 0;
@@ -150,21 +150,14 @@ public class Player {
         }
 
         // Atualiza a posição do jogador com base na velocidade horizontal
-        if(!onKnockback){
-            if(!isDashing){
-                sprite.translateX(direction * velocityBoost * velocity.x * deltaTime);
-            }
-            else {
-                sprite.translateX(fixDirection * velocityBoost * velocity.x * deltaTime);
-            }
+
+        if(!isDashing){
+            sprite.translateX(direction * velocityBoost * velocity.x * deltaTime);
         }
         else {
-            sprite.translateX(spriteDirection * -velocityBoost * velocity.x * deltaTime);
-            knockbackTimer += deltaTime;
-            if(knockbackTimer > KNOCKBACK_TIMER){
-                onKnockback = false;
-            }
+            sprite.translateX(fixDirection * velocityBoost * velocity.x * deltaTime);
         }
+
 
         //Reduz constantemente qualquer aumento na velocidade do player
         if(velocityBoost > 1){
@@ -209,6 +202,13 @@ public class Player {
             dashDelay = 0;
         }
 
+        if(onKnockback){
+            knockbackTimer += deltaTime;
+        }
+        if(knockbackTimer > KNOCKBACK_TIMER){
+            onKnockback = false;
+        }
+
         // Atualiza posicao vertical
         if(velocity.y < FINAL_FALL_VELOCITY){
             velocity.y = FINAL_FALL_VELOCITY;
@@ -229,21 +229,19 @@ public class Player {
     }
 
     public void render(SpriteBatch batch) {
-        // Se estiver andando, mostra a animação de walking
-        if(!isAttacking){
-            if(isjumping) {
-                frame = jumpingAnimation.getKeyFrame(stateTime, false);
+        // Muda a animacao do personagem
+        if(isjumping) {
+            frame = jumpingAnimation.getKeyFrame(stateTime, false);
+        }
+        else if(isfalling) {
+            frame = fallingAnimation.getKeyFrame(stateTime, false);
+        }else if(isWalking || isDashing) {
+            frame = walkingAnimation.getKeyFrame(stateTime,true);
+        }else{
+            if(spriteDirection == 1){
+                offset = 20;
             }
-            else if(isfalling) {
-                frame = fallingAnimation.getKeyFrame(stateTime, false);
-            }else if(isWalking || isDashing) {
-                frame = walkingAnimation.getKeyFrame(stateTime,true);
-            }else{
-                if(spriteDirection == 1){
-                    offset = 20;
-                }
-                frame = idleAnimation.getKeyFrame(stateTime,true);
-            }
+            frame = idleAnimation.getKeyFrame(stateTime,true);
         }
 
 
@@ -406,7 +404,7 @@ public class Player {
 
     public Rectangle getPlayerBounds() {
         float size = 140 * scale;
-        return new Rectangle(sprite.getX() + 20 + sprite.getOriginX() * scale - offset, sprite.getY() + sprite.getOriginY() * scale, size, 16.8f * spriteScale * scale);
+        return new Rectangle(sprite.getX() + 20 - offset, sprite.getY(), size, 16.8f * spriteScale * scale);
     }
 
     public Rectangle getPlayerHitBox(){

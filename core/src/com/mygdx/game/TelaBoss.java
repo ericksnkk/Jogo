@@ -21,7 +21,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
 
-public class TelaTeste implements Screen {
+public class TelaBoss implements Screen {
     final int MAP_SCALE = 3;
     final int TILE_SCALE = 16;
     final int SCALE = TILE_SCALE * MAP_SCALE;
@@ -35,58 +35,44 @@ public class TelaTeste implements Screen {
     private OrthogonalTiledMapRenderer tmr;
     private TiledMap map;
 
-    private Rectangle[] plataformas = new Rectangle[15];
+    private Rectangle[] plataformas = new Rectangle[5];
     private Rectangle nextMapHitbox;
     private int nPlataformas;
     private boolean debugMode = true;
 
-    public TelaTeste(final MyGdxGame game, Player player) {
+    public TelaBoss(final MyGdxGame game, Player player) {
         this.game = game;
 
-        map = new TmxMapLoader().load("maps/lvl1.tmx");
+        map = new TmxMapLoader().load("maps/lvlboss.tmx");
         tmr = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
 
 
         shape = new ShapeRenderer();
 
-        nPlataformas = 15;
+        nPlataformas = 5;
 
-        plataformas[0] = new Rectangle(0*SCALE, 7 * SCALE, 50 * SCALE, 2 * SCALE);
-        plataformas[1] = new Rectangle(10*SCALE, 9 * SCALE, 2 * SCALE, 2 * SCALE);
-        plataformas[2] = new Rectangle(9*SCALE, 8 * SCALE, 1 * SCALE, 10 * SCALE);
-        plataformas[3] = new Rectangle(9*SCALE, 21 * SCALE, 1 * SCALE, 7 * SCALE);
-        plataformas[4] = new Rectangle(8*SCALE, 17 * SCALE, 1 * SCALE, 5 * SCALE);
-        plataformas[5] = new Rectangle(9*SCALE, 24 * SCALE, 3 * SCALE, 2 * SCALE);
-        plataformas[6] = new Rectangle(15*SCALE, 14 * SCALE, 8 * SCALE, 1 * SCALE);
-        plataformas[7] = new Rectangle(28*SCALE, 16 * SCALE, 8 * SCALE, 1 * SCALE);
-        plataformas[8] = new Rectangle(40*SCALE, 19 * SCALE, 10 * SCALE, 1 * SCALE);
-        plataformas[9] = new Rectangle(24*SCALE, 9 * SCALE, 6 * SCALE, 2 * SCALE);
-        plataformas[10] = new Rectangle(39*SCALE, 9 * SCALE, 6 * SCALE, 3 * SCALE);
-        plataformas[11] = new Rectangle(46*SCALE, 9 * SCALE, 1 * SCALE, 10 * SCALE);
-        plataformas[12] = new Rectangle(9*SCALE, 25 * SCALE, 36 * SCALE, 2 * SCALE);
-        plataformas[13] = new Rectangle(45*SCALE, 23 * SCALE, 5 * SCALE, 3 * SCALE);
-        plataformas[14] = new Rectangle(49*SCALE, 20 * SCALE, 1 * SCALE, 4 * SCALE);
-        //plataformas[15] = new Rectangle(0*SCALE, 0 * SCALE, 100 * SCALE, 9 * SCALE);
+        plataformas[0] = new Rectangle(0*SCALE, 11 * SCALE, 55 * SCALE, 1 * SCALE);
+        plataformas[1] = new Rectangle(0*SCALE, 28 * SCALE, 55 * SCALE, 2 * SCALE);
+        plataformas[2] = new Rectangle(4*SCALE, 11 * SCALE, 1 * SCALE, 5 * SCALE);
+        plataformas[3] = new Rectangle(4*SCALE, 14 * SCALE, 3 * SCALE, 20 * SCALE);
+        plataformas[4] = new Rectangle(43*SCALE, 11 * SCALE, 2 * SCALE, 20 * SCALE);
 
-        nextMapHitbox = new Rectangle(48*SCALE, 20 * SCALE, 1 * SCALE, 4 * SCALE);
+        nextMapHitbox = new Rectangle(3*SCALE, 12 * SCALE, 1 * SCALE, 5 * SCALE);
 
         this.player = player;
-        this.player.setPosition(15 * SCALE, 11 * SCALE);
+        this.player.setPosition(5 * SCALE, 12 * SCALE);
 
         playerController = new PlayerController(player);
         Gdx.input.setInputProcessor(playerController);
 
+        game.camera.position.set(8*SCALE , 17 * SCALE, 0);
+        game.camera.update();
+
+
         inimigos = new Array<Inimigo>();
-        inimigos.add(new InimigoTerrestre(
-                game.assetManager.get("Skeleton enemy.png", Texture.class),
-                34 * SCALE, 9 * SCALE));
-        // Adiciona um inimigo voador
-        inimigos.add(new InimigoVoador(
-                game.assetManager.get("Skeleton enemy.png", Texture.class),
-                15 * SCALE, 20 * SCALE));
-        inimigos.add(new InimigoVoador(
-                game.assetManager.get("Skeleton enemy.png", Texture.class),
-                34 * SCALE, 20 * SCALE));
+        inimigos.add(new BossGolem(
+                game.assetManager.get("Wraith_idle.png", Texture.class),
+                28 * SCALE, 12 * SCALE));
     }
 
     @Override
@@ -118,8 +104,8 @@ public class TelaTeste implements Screen {
         Rectangle playerHitbox = player.getPlayerHitBox();
         detectarColisao(playerBounds, previousPlayerBounds, plataformas);
 
-        //Updates do jogo
 
+        //Updates do jogo
 
         if(!player.isAttacking()){ //Reseta o Foi Atacado de todos os inimigos
             for (Inimigo inimigo : inimigos) {
@@ -134,11 +120,11 @@ public class TelaTeste implements Screen {
         }
 
         if(player.getPlayerBounds().overlaps(nextMapHitbox)){
-            game.setScreen(new TelaBoss(game, player));
+            game.setScreen(new TelaTeste(game, player));
         }
 
 
-        game.batch.begin();                                 //Renderiza sprites na tela
+        game.batch.begin();                          //Renderiza sprites na tela
         for (Inimigo inimigo : inimigos) {
             if (inimigo.isAlive()) {
                 inimigo.draw(game.batch);
@@ -151,8 +137,6 @@ public class TelaTeste implements Screen {
 
         shape.setProjectionMatrix(game.camera.combined);
         shape.begin(ShapeRenderer.ShapeType.Line);        //Renderiza shapes na tela
-
-
 
         shape.end();
 
@@ -180,6 +164,14 @@ public class TelaTeste implements Screen {
                 }
             }
 
+            for (Inimigo inimigo : inimigos) {
+                if (inimigo instanceof BossGolem) {
+                    BossGolem boss = (BossGolem) inimigo;
+                    boss.drawDetectionCircles(shape);   // Desenha os círculos (ciano, azul e verde)
+                    boss.renderEffects(shape, player);            // Desenha, por exemplo, o feixe laser ou as pedras caindo
+                }
+            }
+
             playerBounds = player.getPlayerBounds();
             shape.setColor(Color.WHITE);
             shape.rect(playerBounds.x, playerBounds.y, playerBounds.width, playerBounds.height);
@@ -194,6 +186,10 @@ public class TelaTeste implements Screen {
 
             shape.setColor(Color.ORANGE);
             shape.rect(nextMapHitbox.x, nextMapHitbox.y, nextMapHitbox.width, nextMapHitbox.height);
+
+
+
+
 
             shape.end();
         }

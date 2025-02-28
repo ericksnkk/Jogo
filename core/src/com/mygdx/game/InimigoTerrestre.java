@@ -43,12 +43,12 @@ public class InimigoTerrestre extends Inimigo {
 
         // Definindo os raios:
         DETECTION_RADIUS = sprite.getWidth() * scale * 10f; // por exemplo, 6× a largura do sprite
-        SPRINT_RADIUS = sprite.getWidth() * scale * 5f;     // 1.2× a largura do sprite
+        SPRINT_RADIUS = sprite.getWidth() * scale * 7f;     // 1.2× a largura do sprite
 
         // Velocidades
         patrolSpeed = 50f;
         chaseSpeed = 100f;
-        sprintSpeed = 300f;
+        sprintSpeed = 200f;
 
         state = STATE_PATROL;
         sprintTimer = 0f;
