@@ -36,6 +36,7 @@ public class Player {
     private float jumpTimer, attackTimer, dashTimer, knockbackTimer;
     private float attackDelay, dashDelay;
     private int attackDirection; //1-cima; 2-direita; 3-baixo; 4-esquerda
+    private int offset;
 
     private TextureAtlas idleAtlas;
     private Animation<AtlasRegion> idleAnimation;
@@ -45,8 +46,18 @@ public class Player {
     private Animation<AtlasRegion> jumpingAnimation;
     private TextureAtlas fallingAtlas;
     private Animation<AtlasRegion> fallingAnimation;
+    private TextureAtlas atk1Atlas;
+    private Animation<AtlasRegion> atk1Animation;
+    private TextureAtlas atk2Atlas;
+    private Animation<AtlasRegion> atk2Animation;
+    private  TextureAtlas atk3Atlas;
+    private Animation<AtlasRegion> atk3Animation;
+    private TextureAtlas deathAtlas;
+    private Animation<AtlasRegion> deathAnimation;
+    private TextureAtlas hitedAtlas;
+    private Animation<AtlasRegion> hitedAnimation;
 
-    private float stateTime;
+    public float stateTime;
     private boolean isIdle, isWalking;
     AtlasRegion frame;
 
@@ -72,7 +83,6 @@ public class Player {
         fixDirection = 0;
         jumpSpeed = 650; // Velocidade do pulo
         onGround = false;
-        isAttacking = false;
         onKnockback = false;
         isDashing = false;
         doubleJump = true;
@@ -95,36 +105,59 @@ public class Player {
         jumpingAnimation = new Animation<>(0.1f, jumpingAtlas.getRegions());
         fallingAtlas = new TextureAtlas("FallingAnimation/falling.atlas");
         fallingAnimation = new Animation<>(0.1f, fallingAtlas.getRegions());
+        atk1Atlas = new TextureAtlas("atk1/atk1.atlas");
+        atk1Animation = new Animation<>(0.5f, atk1Atlas.getRegions());
+        atk2Atlas = new TextureAtlas("atk2/atk2.atlas");
+        atk2Animation = new Animation<>(0.05f, atk2Atlas.getRegions());
+        atk3Atlas = new TextureAtlas("atk3/atk3.atlas");
+        atk3Animation = new Animation<>(0.05f, atk3Atlas.getRegions());
+        deathAtlas = new TextureAtlas("death/death.atlas");
+        deathAnimation = new Animation<>(0.1f, deathAtlas.getRegions());
+        hitedAtlas = new TextureAtlas("hited/hited.atlas");
+        hitedAnimation = new Animation<>(0.1f, hitedAtlas.getRegions());
+
 
         stateTime = 0;
         isIdle = true;
         isWalking = false;
         isjumping = false;
         isfalling = false;
+        isAttacking = false;
     }
 
     public void update(float deltaTime) {
-        //System.out.println(this.sprite.getX() + "   " + this.sprite.getY() + "  " + lookDirection);
+        System.out.println(this.sprite.getX() / (3 * 16) + "   " + this.sprite.getY() / (3 * 16));
+        //deltaTime = deltaTime/7;
         stateTime += deltaTime;
         isWalking = direction != 0;
         isIdle = !isWalking;
 
+        offset = 0;
+
+        //Gravidade
+        velocity.y += gravity * deltaTime;
+
+        if(dashTimer < DASH_TIMER){
+            dashTimer += deltaTime;
+            velocity.y = 0;
+
+        } else if(dashTimer != 1){
+            fixDirection = 0;
+            dashTimer = 1;
+            isDashing = false;
+            dashDelay = DASH_DELAY;
+            onAction = false;
+        }
+
         // Atualiza a posição do jogador com base na velocidade horizontal
-        if(!onKnockback){
-            if(!isDashing){
-                sprite.translateX(direction * velocityBoost * velocity.x * deltaTime);
-            }
-            else {
-                sprite.translateX(fixDirection * velocityBoost * velocity.x * deltaTime);
-            }
+
+        if(!isDashing){
+            sprite.translateX(direction * velocityBoost * velocity.x * deltaTime);
         }
         else {
-            sprite.translateX(spriteDirection * -velocityBoost * velocity.x * deltaTime);
-            knockbackTimer += deltaTime;
-            if(knockbackTimer > KNOCKBACK_TIMER){
-                onKnockback = false;
-            }
+            sprite.translateX(fixDirection * velocityBoost * velocity.x * deltaTime);
         }
+
 
         //Reduz constantemente qualquer aumento na velocidade do player
         if(velocityBoost > 1){
@@ -133,10 +166,6 @@ public class Player {
                 velocityBoost = 1;
             }
         }
-
-        //Gravidade
-        velocity.y += gravity * deltaTime;
-
 
         //Timers e delays
         if(jumpTimer < JUMP_TIMER){
@@ -166,23 +195,18 @@ public class Player {
             attackDelay = 0;
         }
 
-        if(dashTimer < DASH_TIMER){
-            dashTimer += deltaTime;
-            velocity.y = 0;
-
-        } else if(dashTimer != 1){
-            fixDirection = 0;
-            dashTimer = 1;
-            isDashing = false;
-            dashDelay = DASH_DELAY;
-            onAction = false;
-        }
-
         if(dashDelay > 0){
             dashDelay -= deltaTime;
         }
         else if(dashDelay != 0){
             dashDelay = 0;
+        }
+
+        if(onKnockback){
+            knockbackTimer += deltaTime;
+        }
+        if(knockbackTimer > KNOCKBACK_TIMER){
+            onKnockback = false;
         }
 
         // Atualiza posicao vertical
@@ -205,7 +229,7 @@ public class Player {
     }
 
     public void render(SpriteBatch batch) {
-        // Se estiver andando, mostra a animação de walking
+        // Muda a animacao do personagem
         if(isjumping) {
             frame = jumpingAnimation.getKeyFrame(stateTime, false);
         }
@@ -214,21 +238,25 @@ public class Player {
         }else if(isWalking || isDashing) {
             frame = walkingAnimation.getKeyFrame(stateTime,true);
         }else{
+            if(spriteDirection == 1){
+                offset = 20;
+            }
             frame = idleAnimation.getKeyFrame(stateTime,true);
         }
 
+
         if(isAttacking){
             switch (attackDirection){
-                case 1:
+                case 1: //Cima
                     attack_sprite.setPosition(sprite.getX() + (sprite.getWidth() * scale), sprite.getY()  + (sprite.getHeight() * scale) - 15);
                     break;
-                case 2:
+                case 2: //Diretia
                     attack_sprite.setPosition(sprite.getX() + (sprite.getWidth() * scale)- 15, sprite.getY());
                     break;
-                case 3:
+                case 3:  //Baixo
                     attack_sprite.setPosition(sprite.getX() - 10 , sprite.getY() + 15);
                     break;
-                case 4:
+                case 4:  //Esquerda
                     attack_sprite.setPosition(sprite.getX() - (attack_sprite.getWidth() * (1f/2f)) + 15, sprite.getY());
                     break;
             }
@@ -236,7 +264,6 @@ public class Player {
         }
         sprite.setRegion(frame);
         sprite.setSize(frame.getRegionWidth() * scale * spriteScale, frame.getRegionHeight() * scale * spriteScale);
-        System.out.println(frame.getRegionWidth() + "   " + sprite.getWidth());
 
         if(spriteDirection == -1 && !sprite.isFlipX()){
             sprite.flip(true, false);
@@ -244,9 +271,7 @@ public class Player {
             sprite.flip(true, false);
         }
 
-
         sprite.draw(batch);
-
     }
 
     public void startJump() {
@@ -276,15 +301,24 @@ public class Player {
                 attackTimer = 0;
                 onAction = true;
 
+                stateTime = 0; //Reseta a animacao pro primeiro frame
+
                 if(!onGround && lookDirection == -1) {
                     attackDirection = 3;    //Baixo
                     attack_sprite.setRotation(-90);
-                    attack_sprite.setFlip(false, false);
-
+                    if(spriteDirection == 1) {
+                        attack_sprite.setFlip(false, true);
+                    } else {
+                        attack_sprite.setFlip(false, false);
+                    }
                 } else if(lookDirection == 1) {
                     attackDirection = 1;    //Cima
                     attack_sprite.setRotation(90);
-                    attack_sprite.setFlip(false, false);
+                    if(spriteDirection == 1) {
+                        attack_sprite.setFlip(false, false);
+                    } else {
+                        attack_sprite.setFlip(false, true);
+                    }
                 } else {
                     if(spriteDirection == 1){
                         attackDirection = 2;    //Direita
@@ -313,8 +347,6 @@ public class Player {
                 onAction = true;
             }
         }
-
-
     }
 
     public void attackKnockback(){
@@ -347,7 +379,6 @@ public class Player {
             velocity.y=0;
             this.doubleJump = true;
         }
-
     }
 
     public void setVelocityY(float verticalSpeed) {
@@ -367,17 +398,17 @@ public class Player {
     }
 
     public Vector2 getCenterPosition() {
-        return new Vector2(sprite.getX() + (sprite.getWidth() * scale) / 2, sprite.getY() + (sprite.getHeight() * scale) / 2);
+        Rectangle bounds = getPlayerBounds();
+        return new Vector2(bounds.x + (bounds.width / 2), bounds.y + (bounds.height / 2));
     }
 
     public Rectangle getPlayerBounds() {
-        float middle = (sprite.getWidth() * scale)/2, size = 140 * scale;
-//        return new Rectangle(sprite.getX() + 30, sprite.getY(), size, 16.8f * spriteScale * scale);
-        return new Rectangle(sprite.getX() + 20, sprite.getY(), size, 16.8f * spriteScale * scale);
+        float size = 140 * scale;
+        return new Rectangle(sprite.getX() + 20 - offset, sprite.getY(), size, 16.8f * spriteScale * scale);
     }
 
     public Rectangle getPlayerHitBox(){
-        float middle = (sprite.getWidth() * scale)/2, size = 140 * scale;
+        float size = 140 * scale;
         return new Rectangle(sprite.getX() + 20 + 10, sprite.getY(), size - 20, 16.8f * spriteScale * scale);
     }
 

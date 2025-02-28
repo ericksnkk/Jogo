@@ -41,10 +41,14 @@ public class PlayerController extends InputAdapter {
     @Override
     public boolean keyUp(int keycode) {
         if (keycode == Input.Keys.A) {
-            player.atualizaDirection(1);
+            if(player.getDirection() != 0){
+                player.atualizaDirection(1);
+            }
         }
         if (keycode == Input.Keys.D) {
-            player.atualizaDirection(-1);
+            if(player.getDirection() != 0){
+                player.atualizaDirection(-1);
+            }
         }
         if (keycode == Input.Keys.S) {
             player.atualizaLookDirection(1);

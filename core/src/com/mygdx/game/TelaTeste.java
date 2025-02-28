@@ -16,57 +16,77 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
 
 public class TelaTeste implements Screen {
     final int MAP_SCALE = 3;
+    final int TILE_SCALE = 16;
+    final int SCALE = TILE_SCALE * MAP_SCALE;
     final MyGdxGame game;
     private Player player;
     private PlayerController playerController;
-    private Inimigo inimigo;
+    private Array<Inimigo> inimigos;
 
     private ShapeRenderer shape;
 
     private OrthogonalTiledMapRenderer tmr;
     private TiledMap map;
 
-    private Rectangle[] plataformas = new Rectangle[15], paredes = new Rectangle[10];
-    private int nPlataformas, nParedes;
+    private Rectangle[] plataformas = new Rectangle[15];
+    private Rectangle nextMapHitbox;
+    private int nPlataformas;
     private boolean debugMode = true;
 
-    public TelaTeste(final MyGdxGame game) {
+    public TelaTeste(final MyGdxGame game, Player player) {
         this.game = game;
 
-        map = new TmxMapLoader().load("maps/lvl2.tmx");
+        map = new TmxMapLoader().load("maps/lvl1.tmx");
         tmr = new OrthogonalTiledMapRenderer(map, MAP_SCALE);
 
 
         shape = new ShapeRenderer();
 
         nPlataformas = 15;
-        nParedes = 3;
 
-        paredes[0] = new Rectangle(1840*MAP_SCALE, 0, 1380 * MAP_SCALE, 16*MAP_SCALE);
-        paredes[1] = new Rectangle(1856*MAP_SCALE, 0, 16 * MAP_SCALE, 400*MAP_SCALE);
-        paredes[2] = new Rectangle(3200*MAP_SCALE, 0, 16 * MAP_SCALE, 400*MAP_SCALE);
+        plataformas[0] = new Rectangle(0*SCALE, 7 * SCALE, 50 * SCALE, 2 * SCALE);
+        plataformas[1] = new Rectangle(10*SCALE, 9 * SCALE, 2 * SCALE, 2 * SCALE);
+        plataformas[2] = new Rectangle(9*SCALE, 8 * SCALE, 1 * SCALE, 10 * SCALE);
+        plataformas[3] = new Rectangle(9*SCALE, 21 * SCALE, 1 * SCALE, 7 * SCALE);
+        plataformas[4] = new Rectangle(8*SCALE, 17 * SCALE, 1 * SCALE, 5 * SCALE);
+        plataformas[5] = new Rectangle(9*SCALE, 24 * SCALE, 3 * SCALE, 2 * SCALE);
+        plataformas[6] = new Rectangle(15*SCALE, 14 * SCALE, 8 * SCALE, 1 * SCALE);
+        plataformas[7] = new Rectangle(28*SCALE, 16 * SCALE, 8 * SCALE, 1 * SCALE);
+        plataformas[8] = new Rectangle(40*SCALE, 19 * SCALE, 10 * SCALE, 1 * SCALE);
+        plataformas[9] = new Rectangle(24*SCALE, 9 * SCALE, 6 * SCALE, 2 * SCALE);
+        plataformas[10] = new Rectangle(39*SCALE, 9 * SCALE, 6 * SCALE, 3 * SCALE);
+        plataformas[11] = new Rectangle(46*SCALE, 9 * SCALE, 1 * SCALE, 10 * SCALE);
+        plataformas[12] = new Rectangle(9*SCALE, 25 * SCALE, 36 * SCALE, 2 * SCALE);
+        plataformas[13] = new Rectangle(45*SCALE, 23 * SCALE, 5 * SCALE, 3 * SCALE);
+        plataformas[14] = new Rectangle(49*SCALE, 20 * SCALE, 1 * SCALE, 4 * SCALE);
+        //plataformas[15] = new Rectangle(0*SCALE, 0 * SCALE, 100 * SCALE, 9 * SCALE);
 
-        plataformas[0] = new Rectangle(1984*MAP_SCALE, 64 * MAP_SCALE, 160 * MAP_SCALE, 16*MAP_SCALE);
-        plataformas[1] = new Rectangle(2223*MAP_SCALE, 64 * MAP_SCALE, 67 * MAP_SCALE, 16*MAP_SCALE);
-        plataformas[2] = new Rectangle(2300*MAP_SCALE, 112 * MAP_SCALE, 80 * MAP_SCALE, 16*MAP_SCALE);
-        plataformas[3] = new Rectangle(2608*MAP_SCALE, 0 * MAP_SCALE, 16 * MAP_SCALE, 64*MAP_SCALE);
-        plataformas[4] = new Rectangle(2672*MAP_SCALE, 0 * MAP_SCALE, 16 * MAP_SCALE, 96*MAP_SCALE);
-        plataformas[5] = new Rectangle(2768*MAP_SCALE, 112 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
-        plataformas[6] = new Rectangle(3006*MAP_SCALE, 48 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
-        plataformas[7] = new Rectangle(2416*MAP_SCALE, 208 * MAP_SCALE, 128 * MAP_SCALE, 16*MAP_SCALE);
-        plataformas[8] = new Rectangle(2016*MAP_SCALE, 256 * MAP_SCALE, 352 * MAP_SCALE, 16*MAP_SCALE);
+        nextMapHitbox = new Rectangle(48*SCALE, 20 * SCALE, 1 * SCALE, 4 * SCALE);
 
-        inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 2500 * MAP_SCALE, 16 * MAP_SCALE);
-        player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), game.assetManager.get("attack_sprite.png", Texture.class) ,2500 * MAP_SCALE, 300);
+        this.player = player;
+        this.player.setPosition(15 * SCALE, 11 * SCALE);
 
         playerController = new PlayerController(player);
         Gdx.input.setInputProcessor(playerController);
+
+        inimigos = new Array<Inimigo>();
+        inimigos.add(new InimigoTerrestre(
+                game.assetManager.get("Skeleton enemy.png", Texture.class),
+                34 * SCALE, 9 * SCALE));
+        // Adiciona um inimigo voador
+        inimigos.add(new InimigoVoador(
+                game.assetManager.get("Skeleton enemy.png", Texture.class),
+                15 * SCALE, 20 * SCALE));
+        inimigos.add(new InimigoVoador(
+                game.assetManager.get("Skeleton enemy.png", Texture.class),
+                34 * SCALE, 20 * SCALE));
     }
 
     @Override
@@ -74,7 +94,7 @@ public class TelaTeste implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(.21f, .37f, .23f, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         game.batch.setProjectionMatrix(game.camera.combined);
@@ -84,70 +104,80 @@ public class TelaTeste implements Screen {
 
         Rectangle previousPlayerBounds = player.getPlayerBounds(); //Posicao antiga do player para usa na colisao
 
-        //Updates do jogo
+        float camX = game.camera.position.x - game.camera.viewportWidth / 2;
+        float camY = game.camera.position.y - game.camera.viewportHeight / 2;
+        Rectangle cameraBounds = new Rectangle(camX, camY, game.camera.viewportWidth, game.camera.viewportHeight);
+
         player.update(delta);
-        inimigo.update(delta);
+        for (Inimigo inimigo : inimigos) {
+            inimigo.update(delta, player, plataformas, cameraBounds);
+        }
 
         //Get hitbox para colisao
         Rectangle playerBounds = player.getPlayerBounds();
-        Rectangle playerHitBox;
-        Rectangle hitboxInimigo = inimigo.getHitboxRect();
+        Rectangle playerHitbox = player.getPlayerHitBox();
+        detectarColisao(playerBounds, previousPlayerBounds, plataformas);
 
-        Rectangle[] r = {paredes[0], paredes[1], paredes[2],
-                        plataformas[0], plataformas[1], plataformas[2], plataformas[3], plataformas[4], plataformas[5], plataformas[6],
-                        plataformas[7], plataformas[8]};
+        //Updates do jogo
 
-        detectarColisao(playerBounds, previousPlayerBounds, r);
 
         if(!player.isAttacking()){ //Reseta o Foi Atacado de todos os inimigos
-            inimigo.setWasHited(false);
+            for (Inimigo inimigo : inimigos) {
+                inimigo.setWasHited(false);
+            }
         }
         else {
             Rectangle attackHitBox = player.getAttackHitBox();
-            colisaoAtaque(attackHitBox, inimigo);
+            for (Inimigo inimigo : inimigos) {
+                colisaoAtaque(attackHitBox, inimigo);
+            }
         }
 
-        playerHitBox = player.getPlayerHitBox();
-        colisaoInimigoPlayer(playerHitBox, inimigo);
+        if(player.getPlayerBounds().overlaps(nextMapHitbox)){
+            game.setScreen(new TelaBoss(game, player));
+        }
 
 
         game.batch.begin();                                 //Renderiza sprites na tela
-        if(inimigo.isAlive()){
-            inimigo.draw(game.batch);
+        for (Inimigo inimigo : inimigos) {
+            if (inimigo.isAlive()) {
+                inimigo.draw(game.batch);
+            }
         }
         player.render(game.batch);
 
         game.batch.end();
 
-        Rectangle teste = plataformas[8];
 
         shape.setProjectionMatrix(game.camera.combined);
         shape.begin(ShapeRenderer.ShapeType.Line);        //Renderiza shapes na tela
 
 
-        if (player.isAttacking()) {
-            shape.setColor(Color.YELLOW);
-            Rectangle attackHitBox = player.getAttackHitBox();
-            shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
-        }
 
         shape.end();
 
         if(debugMode) {
             shape.begin(ShapeRenderer.ShapeType.Line);
 
-            shape.setColor(Color.FIREBRICK);
-            shape.rect(teste.x, teste.y, teste.width, teste.height);
+//            if (player.isAttacking()) {
+//                shape.setColor(Color.YELLOW);
+//                Rectangle attackHitBox = player.getAttackHitBox();
+//                shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
+//            }
 
-            if (player.isAttacking()) {
-                shape.setColor(Color.YELLOW);
-                Rectangle attackHitBox = player.getAttackHitBox();
-                shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
-            }
-
-            if (inimigo.isAlive()) {
-                shape.setColor(Color.ORANGE);
-                shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
+            for (Inimigo inimigo : inimigos) {
+                if (inimigo.isAlive()) {
+                    shape.setColor(Color.ORANGE);
+                    Rectangle hitboxInimigo = inimigo.getHitboxRect();
+                    shape.rect(hitboxInimigo.x, hitboxInimigo.y, hitboxInimigo.width, hitboxInimigo.height);
+                    // Se o inimigo for voador, desenha os círculos de detecção
+                    if (inimigo instanceof InimigoVoador) {
+                        ((InimigoVoador) inimigo).desenharAreas(shape);
+                    }
+                    if (inimigo instanceof InimigoTerrestre) {
+                        ((InimigoTerrestre) inimigo).desenharAreas(shape);
+                    }
+                }
             }
 
             playerBounds = player.getPlayerBounds();
@@ -155,8 +185,15 @@ public class TelaTeste implements Screen {
             shape.rect(playerBounds.x, playerBounds.y, playerBounds.width, playerBounds.height);
 
             shape.setColor(Color.RED);
-            shape.rect(playerHitBox.x, playerHitBox.y, playerHitBox.width, playerHitBox.height);
+            shape.rect(playerHitbox.x, playerHitbox.y, playerHitbox.width, playerHitbox.height);
 
+            for(int i = 0; i < nPlataformas; i++){
+                shape.setColor(Color.RED);
+                shape.rect(plataformas[i].x, plataformas[i].y, plataformas[i].width, plataformas[i].height);
+            }
+
+            shape.setColor(Color.ORANGE);
+            shape.rect(nextMapHitbox.x, nextMapHitbox.y, nextMapHitbox.width, nextMapHitbox.height);
 
             shape.end();
         }
@@ -243,15 +280,12 @@ public class TelaTeste implements Screen {
 
     private void colisaoAtaque(Rectangle playerAtack, Inimigo inimigo){
         Rectangle hitBoxInimigo = inimigo.getHitboxRect();
-        if(playerAtack.overlaps(hitBoxInimigo)){
-            if(inimigo.isAlive()){
-                if(!inimigo.wasHited()){
-                    inimigo.decreaseLife(1);
-                    inimigo.setWasHited(true);
+        if (playerAtack.overlaps(hitBoxInimigo)) {
+            if (inimigo.isAlive() && !inimigo.wasHited()) {
+                inimigo.decreaseLife(1);
+                inimigo.setWasHited(true);
 
-                    player.attackKnockback();
-                }
-
+                player.attackKnockback();
             }
         }
     }
@@ -260,7 +294,7 @@ public class TelaTeste implements Screen {
         Rectangle hitBoxInimigo = inimigo.getHitboxRect();
 
         if(playerBounds.overlaps(hitBoxInimigo)){
-            //player.attackKnockback();
+            player.attackKnockback();
         }
     }
 }

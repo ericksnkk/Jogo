@@ -58,6 +58,13 @@ public class Menu implements Screen{
         game.batch.end();
     }
 
+    public void iniciaGame(){
+        game.setScreen(new TelaBoss(game,
+                        new Player(game.assetManager.get("Wraith_idle.png", Texture.class),
+                        game.assetManager.get("attack_sprite.png", Texture.class) ,
+                        0, 0)));
+    }
+
     @Override
     public void pause() {
 
