@@ -22,6 +22,9 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.S) {
             player.atualizaLookDirection(-1);
         }
+        if (keycode == Input.Keys.W) {
+            player.atualizaLookDirection(1);
+        }
         if (keycode == Input.Keys.SPACE) {
             player.startJump();
         }
@@ -31,6 +34,7 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.E) {
             player.dash();
         }
+
         return false;
     }
 
@@ -45,9 +49,25 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.S) {
             player.atualizaLookDirection(1);
         }
+        if (keycode == Input.Keys.W) {
+            player.atualizaLookDirection(-1);
+        }
         if (keycode == Input.Keys.SPACE) {
             player.endJump();
         }
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (button == Input.Buttons.LEFT) {
+            player.attack();
+        }
+        if (button == Input.Buttons.RIGHT) {
+            player.dash();
+        }
+
+
         return false;
     }
 }

@@ -59,6 +59,8 @@ public class TelaTeste implements Screen {
         plataformas[4] = new Rectangle(2672*MAP_SCALE, 0 * MAP_SCALE, 16 * MAP_SCALE, 96*MAP_SCALE);
         plataformas[5] = new Rectangle(2768*MAP_SCALE, 112 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
         plataformas[6] = new Rectangle(3006*MAP_SCALE, 48 * MAP_SCALE, 144 * MAP_SCALE, 16*MAP_SCALE);
+        plataformas[7] = new Rectangle(2416*MAP_SCALE, 208 * MAP_SCALE, 128 * MAP_SCALE, 16*MAP_SCALE);
+        plataformas[8] = new Rectangle(2016*MAP_SCALE, 256 * MAP_SCALE, 352 * MAP_SCALE, 16*MAP_SCALE);
 
         inimigo = new Inimigo(game.assetManager.get("Skeleton enemy.png", Texture.class), 2500 * MAP_SCALE, 16 * MAP_SCALE);
         player = new Player(game.assetManager.get("Wraith_idle.png", Texture.class), game.assetManager.get("attack_sprite.png", Texture.class) ,2500 * MAP_SCALE, 300);
@@ -92,7 +94,8 @@ public class TelaTeste implements Screen {
         Rectangle hitboxInimigo = inimigo.getHitboxRect();
 
         Rectangle[] r = {paredes[0], paredes[1], paredes[2],
-                        plataformas[0], plataformas[1], plataformas[2], plataformas[3], plataformas[4], plataformas[5], plataformas[6]};
+                        plataformas[0], plataformas[1], plataformas[2], plataformas[3], plataformas[4], plataformas[5], plataformas[6],
+                        plataformas[7], plataformas[8]};
 
         detectarColisao(playerBounds, previousPlayerBounds, r);
 
@@ -116,6 +119,8 @@ public class TelaTeste implements Screen {
 
         game.batch.end();
 
+        Rectangle teste = plataformas[8];
+
         shape.setProjectionMatrix(game.camera.combined);
         shape.begin(ShapeRenderer.ShapeType.Line);        //Renderiza shapes na tela
 
@@ -130,6 +135,9 @@ public class TelaTeste implements Screen {
 
         if(debugMode) {
             shape.begin(ShapeRenderer.ShapeType.Line);
+
+            shape.setColor(Color.FIREBRICK);
+            shape.rect(teste.x, teste.y, teste.width, teste.height);
 
             if (player.isAttacking()) {
                 shape.setColor(Color.YELLOW);
@@ -181,6 +189,14 @@ public class TelaTeste implements Screen {
             game.camera.update();
         } else if (position.x - game.camera.position.x < -100) {
             game.camera.position.set(position.x + 100, game.camera.position.y, 0);
+            game.camera.update();
+        }
+        if(position.y - game.camera.position.y > 200){
+            game.camera.position.set(game.camera.position.x, position.y - 200, 0);
+            game.camera.update();
+        }
+        else if(position.y - game.camera.position.y < -200){
+            game.camera.position.set(game.camera.position.x, position.y + 200, 0);
             game.camera.update();
         }
 
@@ -244,7 +260,7 @@ public class TelaTeste implements Screen {
         Rectangle hitBoxInimigo = inimigo.getHitboxRect();
 
         if(playerBounds.overlaps(hitBoxInimigo)){
-            player.attackKnockback();
+            //player.attackKnockback();
         }
     }
 }

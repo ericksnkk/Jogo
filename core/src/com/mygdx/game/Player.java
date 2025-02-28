@@ -15,12 +15,12 @@ public class Player {
     final float FINAL_FALL_VELOCITY = -1300;
 
     final float DASH_TIMER = 0.2f,
-                ATTACK_TIMER = 0.15f,
+                ATTACK_TIMER = 0.1f,
                 JUMP_TIMER = 0.35f,
                 KNOCKBACK_TIMER = 0.15f;
 
     final float DASH_DELAY = 0.45f,
-                ATTACK_DELAY = 0.4f;
+                ATTACK_DELAY = 0.35f;
 
 
     private Sprite sprite, attack_sprite;
@@ -35,6 +35,7 @@ public class Player {
     private float scale;
     private float jumpTimer, attackTimer, dashTimer, knockbackTimer;
     private float attackDelay, dashDelay;
+    private int attackDirection; //1-cima; 2-direita; 3-baixo; 4-esquerda
 
     private TextureAtlas idleAtlas;
     private Animation<AtlasRegion> idleAnimation;
@@ -91,7 +92,7 @@ public class Player {
     }
 
     public void update(float deltaTime) {
-        System.out.println(this.velocity.y);
+        System.out.println(this.sprite.getX() + "   " + this.sprite.getY() + "  " + lookDirection);
         stateTime += deltaTime;
         isWalking = velocity.x != 0;
         isIdle = !isWalking;
@@ -172,16 +173,6 @@ public class Player {
         sprite.translateY(velocity.y * deltaTime);
 
 
-        //Impedir que passe o chao
-        //Subtituir em algum momento
-//        if (sprite.getY() <= -20) {
-//            sprite.setY(-20);
-//            velocity.y = 0;
-//            onGround = true;
-//            doubleJump = true;
-//            jumpTimer = 1;
-//        }
-
 
         // Controle da direção do sprite (esquerda ou direita)
         if (direction < 0 && spriteDirection != -1) {
@@ -214,19 +205,21 @@ public class Player {
                 sprite.flip(false, false);  // Sem flip (para direita)
             }
         }
+
         if(isAttacking){
-            if(!onGround && lookDirection == -1){
-                attack_sprite.setRotation(-90);
-                attack_sprite.setPosition(sprite.getX() , sprite.getY() + 10);
-                attack_sprite.setFlip(false, false);
-            } else if(spriteDirection == -1){
-                attack_sprite.setRotation(0);
-                attack_sprite.setPosition(sprite.getX() - attack_sprite.getWidth() * (1f/2f) + 15, sprite.getY());
-                attack_sprite.setFlip(true, false);
-            } else {
-                attack_sprite.setRotation(0);
-                attack_sprite.setPosition(sprite.getX() + sprite.getWidth() * scale - 15, sprite.getY());
-                attack_sprite.setFlip(false, false);
+            switch (attackDirection){
+                case 1:
+                    attack_sprite.setPosition(sprite.getX() + (sprite.getWidth() * scale), sprite.getY()  + (sprite.getHeight() * scale) - 15);
+                    break;
+                case 2:
+                    attack_sprite.setPosition(sprite.getX() + (sprite.getWidth() * scale)- 15, sprite.getY());
+                    break;
+                case 3:
+                    attack_sprite.setPosition(sprite.getX() - 10 , sprite.getY() + 15);
+                    break;
+                case 4:
+                    attack_sprite.setPosition(sprite.getX() - (attack_sprite.getWidth() * (1f/2f)) + 15, sprite.getY());
+                    break;
             }
             attack_sprite.draw(batch);
         }
@@ -260,6 +253,27 @@ public class Player {
                 isAttacking = true;
                 attackTimer = 0;
                 onAction = true;
+
+                if(!onGround && lookDirection == -1) {
+                    attackDirection = 3;    //Baixo
+                    attack_sprite.setRotation(-90);
+                    attack_sprite.setFlip(false, false);
+
+                } else if(lookDirection == 1) {
+                    attackDirection = 1;    //Cima
+                    attack_sprite.setRotation(90);
+                    attack_sprite.setFlip(false, false);
+                } else {
+                    if(spriteDirection == 1){
+                        attackDirection = 2;    //Direita
+                        attack_sprite.setRotation(0);
+                        attack_sprite.setFlip(false, false);
+                    } else {
+                        attackDirection = 4;    //Esquerda
+                        attack_sprite.setRotation(0);
+                        attack_sprite.setFlip(true, false);
+                    }
+                }
             }
         }
 
@@ -286,7 +300,7 @@ public class Player {
         knockbackTimer = 0;
 
         if(lookDirection == -1){
-            velocity.y = 2000;
+            velocity.y = 1400;
         }
         else {
             velocityBoost = 1.15f;
@@ -343,30 +357,36 @@ public class Player {
     }
 
     public Rectangle getAttackHitBox() {
-        if(!onGround && lookDirection == -1){
-            return new Rectangle(sprite.getX() - 10,
+        switch (attackDirection){
+            case 1:
+                return new Rectangle(sprite.getX() - 10,
+                                    sprite.getY() + (sprite.getHeight() * scale) - 10,
+                                    sprite.getWidth() * scale + 10,
+                                    100);
+            case 2:
+                return new Rectangle(sprite.getX() + (sprite.getWidth() * scale) - 10,
+                                    sprite.getY(),
+                                    100,
+                                    this.sprite.getHeight() * scale);
+            case 3:
+                return new Rectangle(sprite.getX() - 10,
                                     sprite.getY() - 90,
-                                sprite.getWidth() * scale + 10,
-                                100);
-        }
-        if (spriteDirection == 1) {
-            return new Rectangle(sprite.getX() + (sprite.getWidth() * scale) - 10,
-                                    sprite.getY(),
-                                    100,
-                                    this.sprite.getHeight() * scale);
-        } else {
-            return new Rectangle(sprite.getX() - 90,
+                                    sprite.getWidth() * scale + 10,
+                                    100);
+            case 4:
+                return new Rectangle(sprite.getX() - 90,
                                     sprite.getY(),
                                     100,
                                     this.sprite.getHeight() * scale);
         }
+        return null;
     }
 
     public float getVelocityY() { return velocity.y;  }
 
     public float getVelocityX(){  return velocity.x;   }
 
-    public float getDirection(){  return direction;  }
+    public float getDirection(){  return spriteDirection;  }
 
     public void dispose() {
         idleAtlas.dispose();

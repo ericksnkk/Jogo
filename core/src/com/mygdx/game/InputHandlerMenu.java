@@ -18,7 +18,6 @@ public class InputHandlerMenu extends InputAdapter {
             menu.game.setScreen(new TelaPrincipal(menu.game));
         }
 
-        //System.out.println("keyDown: " + keycode);
         return false;
     }
 
