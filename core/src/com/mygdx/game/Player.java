@@ -130,6 +130,22 @@ public class Player {
         isWalking = direction != 0;
         isIdle = !isWalking;
 
+        //Gravidade
+        velocity.y += gravity * deltaTime;
+
+
+        if(dashTimer < DASH_TIMER){
+            dashTimer += deltaTime;
+            velocity.y = 0;
+
+        } else if(dashTimer != 1){
+            fixDirection = 0;
+            dashTimer = 1;
+            isDashing = false;
+            dashDelay = DASH_DELAY;
+            onAction = false;
+        }
+
         // Atualiza a posição do jogador com base na velocidade horizontal
         if(!onKnockback){
             if(!isDashing){
@@ -154,9 +170,6 @@ public class Player {
                 velocityBoost = 1;
             }
         }
-
-        //Gravidade
-        velocity.y += gravity * deltaTime;
 
 
         //Timers e delays
@@ -187,17 +200,7 @@ public class Player {
             attackDelay = 0;
         }
 
-        if(dashTimer < DASH_TIMER){
-            dashTimer += deltaTime;
-            velocity.y = 0;
 
-        } else if(dashTimer != 1){
-            fixDirection = 0;
-            dashTimer = 1;
-            isDashing = false;
-            dashDelay = DASH_DELAY;
-            onAction = false;
-        }
 
         if(dashDelay > 0){
             dashDelay -= deltaTime;
