@@ -47,6 +47,14 @@ public class Player {
     private Animation<AtlasRegion> fallingAnimation;
     private TextureAtlas atk1Atlas;
     private Animation<AtlasRegion> atk1Animation;
+    private TextureAtlas atk2Atlas;
+    private Animation<AtlasRegion> atk2Animation;
+    private  TextureAtlas atk3Atlas;
+    private Animation<AtlasRegion> atk3Animation;
+    private TextureAtlas deathAtlas;
+    private Animation<AtlasRegion> deathAnimation;
+    private TextureAtlas hitedAtlas;
+    private Animation<AtlasRegion> hitedAnimation;
 
     private float stateTime;
     private boolean isIdle, isWalking;
@@ -97,6 +105,14 @@ public class Player {
         fallingAnimation = new Animation<>(0.1f, fallingAtlas.getRegions());
         atk1Atlas = new TextureAtlas("atk1/atk1.atlas");
         atk1Animation = new Animation<>(0.1f, atk1Atlas.getRegions());
+        atk2Atlas = new TextureAtlas("atk2/atk2.atlas");
+        atk2Animation = new Animation<>(0.1f, atk2Atlas.getRegions());
+        atk3Atlas = new TextureAtlas("atk3/atk3.atlas");
+        atk3Animation = new Animation<>(0.1f, atk3Atlas.getRegions());
+        deathAtlas = new TextureAtlas("death/death.atlas");
+        deathAnimation = new Animation<>(0.1f, deathAtlas.getRegions());
+        hitedAtlas = new TextureAtlas("hited/hited.atlas");
+        hitedAnimation = new Animation<>(0.1f, hitedAtlas.getRegions());
 
 
         stateTime = 0;
