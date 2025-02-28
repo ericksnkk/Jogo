@@ -55,6 +55,9 @@ public class PlayerController extends InputAdapter {
         if (keycode == Input.Keys.SPACE) {
             player.endJump();
         }
+        if(keycode == Input.Keys.G){
+            player.stateTime += 0.05f;
+        }
         return false;
     }
 

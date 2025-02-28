@@ -144,11 +144,6 @@ public class TelaTeste implements Screen {
         shape.begin(ShapeRenderer.ShapeType.Line);        //Renderiza shapes na tela
 
 
-        if (player.isAttacking()) {
-            shape.setColor(Color.YELLOW);
-            Rectangle attackHitBox = player.getAttackHitBox();
-            shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
-        }
 
         shape.end();
 
@@ -158,11 +153,11 @@ public class TelaTeste implements Screen {
             shape.setColor(Color.FIREBRICK);
             shape.rect(teste.x, teste.y, teste.width, teste.height);
 
-            if (player.isAttacking()) {
-                shape.setColor(Color.YELLOW);
-                Rectangle attackHitBox = player.getAttackHitBox();
-                shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
-            }
+//            if (player.isAttacking()) {
+//                shape.setColor(Color.YELLOW);
+//                Rectangle attackHitBox = player.getAttackHitBox();
+//                shape.rect(attackHitBox.x, attackHitBox.y, attackHitBox.width, attackHitBox.height);
+//            }
 
             for (Inimigo inimigo : inimigos) {
                 if (inimigo.isAlive()) {
